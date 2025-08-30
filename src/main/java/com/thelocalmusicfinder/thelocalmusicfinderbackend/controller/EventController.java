@@ -14,6 +14,6 @@ public class EventController {
 
   @GetMapping
   public String getEvents() {
-    return "These are all the events";
+    return "These are all the events 2";
   }
 }
