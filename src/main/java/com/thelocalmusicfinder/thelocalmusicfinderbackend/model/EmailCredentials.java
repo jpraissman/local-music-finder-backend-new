@@ -13,11 +13,11 @@ public class EmailCredentials {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
-  private String google_access_token;
+  @Column(name = "google_access_token", nullable = false)
+  private String googleAccessToken;
 
-  @Column(nullable = false)
-  private String google_expiry;
+  @Column(name = "google_expiry", nullable = false)
+  private String googleExpiry;
 
   // Default constructor needed by JPA
   public EmailCredentials() {}
