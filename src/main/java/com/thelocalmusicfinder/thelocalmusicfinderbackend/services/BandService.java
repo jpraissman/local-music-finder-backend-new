@@ -1,0 +1,70 @@
+package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
+
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
+
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class BandService {
+
+  private final BandRepository bandRepository;
+
+  public Band upsertBand(BasicBandInfo bandInfo, boolean includeUrls) {
+    // Check data is correct
+    if (bandInfo.getTributeBandName() == null
+            && bandInfo.getBandType() == BandType.TRIBUTE_BAND) {
+      throw new IllegalArgumentException("There must be a tributeBandName if BandType is TRIBUTE_BAND");
+    }
+    if (bandInfo.getTributeBandName() != null && bandInfo.getBandType() != BandType.TRIBUTE_BAND) {
+      throw new IllegalArgumentException("BandType must be TRIBUTE_BAND if there is a tributeBandName");
+    }
+
+    String bandName = bandInfo.getBandName().trim();
+    Optional<Band> existingBand = bandRepository.findByBandName(bandName);
+    if (existingBand.isPresent()) {
+      return this.updateBand(existingBand.get(), bandInfo, includeUrls);
+    } else {
+      return this.createBand(bandInfo, includeUrls);
+    }
+  }
+
+  private Band updateBand(Band existingBand, BasicBandInfo updatedBandInfo, boolean includeUrls) {
+    existingBand.setBandType(updatedBandInfo.getBandType());
+    existingBand.setTributeBandName(updatedBandInfo.getTributeBandName());
+    existingBand.setGenres(updatedBandInfo.getGenres());
+
+    if (includeUrls) {
+      existingBand.setFacebookUrl(updatedBandInfo.getFacebookUrl());
+      existingBand.setInstagramUrl(updatedBandInfo.getInstagramUrl());
+      existingBand.setWebsiteUrl(updatedBandInfo.getWebsiteUrl());
+    }
+
+    return bandRepository.save(existingBand);
+  }
+
+  private Band createBand(BasicBandInfo bandInfo, boolean includeUrls) {
+    String facebookUrl = includeUrls ? bandInfo.getFacebookUrl() : null;
+    String instagramUrl = includeUrls ? bandInfo.getInstagramUrl() : null;
+    String websiteUrl = includeUrls ? bandInfo.getWebsiteUrl() : null;
+
+    Band band = Band.builder()
+            .bandName(bandInfo.getBandName().trim())
+            .bandType(bandInfo.getBandType())
+            .tributeBandName(bandInfo.getTributeBandName())
+            .genres(bandInfo.getGenres())
+            .facebookUrl(facebookUrl)
+            .instagramUrl(instagramUrl)
+            .websiteUrl(websiteUrl)
+            .build();
+    return bandRepository.save(band);
+  }
+
+}
