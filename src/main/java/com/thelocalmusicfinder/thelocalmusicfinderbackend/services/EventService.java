@@ -4,18 +4,22 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EventCreatorType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.UpsertEventRequestDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +27,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class EventService {
+  private final BandRepository bandRepository;
+  private final VenueRepository venueRepository;
   @Value("${FROM_EMAIL}")
-  private String mainEmail;
+  private String adminEmail;
 
   private final BandService bandService;
   private final VenueService venueService;
@@ -32,6 +38,7 @@ public class EventService {
   private final VenueMapper venueMapper;
   private final EventRepository eventRepository;
   private final EmailService emailService;
+  private final LoggerService logger;
 
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   private static final SecureRandom random = new SecureRandom();
@@ -41,6 +48,8 @@ public class EventService {
    */
   @Transactional
   public String createEvent(UpsertEventRequestDTO payload) {
+    logger.info("Creating new event. Event info: " + payload.toString());
+
     // Upsert band
     BasicBandInfo bandInfo = bandMapper.toBasicBand(payload);
     Band band = bandService.upsertBand(bandInfo,
@@ -69,9 +78,9 @@ public class EventService {
     eventRepository.save(event);
 
     // Send event confirmation email and admin email
-    if (!event.getEmail().equals(mainEmail)) {
+    if (!event.getEmail().equals(adminEmail)) {
       emailService.sendEventConfirmationEmail(event);
-      emailService.sendAdminEventCreatedEmail(event);
+      emailService.sendAdminEventUpsertedEmail(event, true);
     }
 
     // Check for duplicates
@@ -83,41 +92,52 @@ public class EventService {
     return event.getEventCode();
   }
 
-//  @Transactional
-//  public void editEvent(UpsertEventRequestDTO payload, String eventCode) {
-//    // Make sure event exists
-//    Optional<Event> existingEvent = eventRepository.findByEventCode(eventCode);
-//    if (existingEvent.isEmpty()) {
-//      // TODO: fix exception type
-//      throw new NoSuchElementException("Event with eventCode " + eventCode + " not found");
-//    }
-//
-//    // Upsert band
-//    BasicBandInfo bandInfo = bandMapper.toBasicBand(payload);
-//    Band band = bandService.upsertBand(bandInfo,
-//            payload.getEventCreator() == EventCreatorType.BAND);
-//
-//    // Upsert venue
-//    BasicVenueInfo venueInfo = venueMapper.toBasicVenueInfo(payload);
-//    Venue venue = venueService.upsertVenue(venueInfo,
-//            payload.getEventCreator() == EventCreatorType.VENUE);
-//
-//    // Update event
-//    Event event = existingEvent.get();
-//    event.setBand(band);
-//    event.setVenue(venue);
-//    event.setEventDate(payload.getEventDate());
-//    event.setStartTime(payload.getStartTime());
-//    event.setEndTime(payload.getEndTime());
-//    event.setCoverCharge(payload.getCoverCharge());
-//    event.setAdditionalInfo(payload.getAdditionalInfo());
-//    event.setEventCreator(payload.getEventCreator());
-//    event.setAgreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy());
-//    eventRepository.save(event);
-//
-//
-//    // TODO: At the end, if new venue/band created, need to check if they should be deleted or not
-//  }
+  @Transactional
+  public void editEvent(UpsertEventRequestDTO payload, String eventCode) {
+    // Make sure event exists
+    Optional<Event> existingEvent = eventRepository.findByEventCode(eventCode);
+    if (existingEvent.isEmpty()) {
+      throw new EventNotFound("Event with eventCode " + eventCode + " not found");
+    }
+
+    // Upsert band
+    BasicBandInfo bandInfo = bandMapper.toBasicBand(payload);
+    Band band = bandService.upsertBand(bandInfo,
+            payload.getEventCreator() == EventCreatorType.BAND);
+
+    // Upsert venue
+    BasicVenueInfo venueInfo = venueMapper.toBasicVenueInfo(payload);
+    Venue venue = venueService.upsertVenue(venueInfo,
+            payload.getEventCreator() == EventCreatorType.VENUE);
+
+    // Update event
+    Event event = existingEvent.get();
+    event.setBand(band);
+    event.setVenue(venue);
+    event.setEventDate(payload.getEventDate());
+    event.setStartTime(payload.getStartTime());
+    event.setEndTime(payload.getEndTime());
+    event.setCoverCharge(payload.getCoverCharge());
+    event.setAdditionalInfo(payload.getAdditionalInfo());
+    event.setEventCreator(payload.getEventCreator());
+    event.setAgreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy());
+    eventRepository.save(event);
+
+    // Send admin email
+    if (!event.getEmail().equals(adminEmail)) {
+      emailService.sendAdminEventUpsertedEmail(event, false);
+    }
+
+    // Check for duplicates
+    List<Event> duplicateEvents = eventRepository.findByVenueAndEventDate(event.getVenue(), event.getEventDate());
+    if (duplicateEvents.size() > 1) {
+      emailService.sendDuplicateEventsEmail(duplicateEvents);
+    }
+
+    // Delete any venues or bands that have 0 events
+    bandRepository.deleteAllWithNoEvents();
+    venueRepository.deleteAllWithNoEvents();
+  }
 
   private String getNewEventCode(int length) {
     String newEventCode = generateRandomString(length);
