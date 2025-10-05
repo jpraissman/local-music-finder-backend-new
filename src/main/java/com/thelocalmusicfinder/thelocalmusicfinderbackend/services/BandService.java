@@ -27,6 +27,7 @@ public class BandService {
       throw new IllegalArgumentException("BandType must be TRIBUTE_BAND if there is a tributeBandName");
     }
 
+    // Check for existing band based on name
     String bandName = bandInfo.getBandName().trim();
     Optional<Band> existingBand = bandRepository.findByBandName(bandName);
     if (existingBand.isPresent()) {

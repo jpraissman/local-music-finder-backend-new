@@ -1,6 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EmailMessage;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EmailSendException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.ports.driven.ForSendingEmails;
 
@@ -23,6 +24,7 @@ public class EmailService {
   private String fromEmail;
 
   private final ForSendingEmails emailService;
+  private final LoggerService logger;
 
   public void sendEventConfirmationEmail(Event event) {
     String htmlBody = String.format(
@@ -66,10 +68,11 @@ public class EmailService {
     emailService.sendEmail(emailMessage);
   }
 
-  public void sendAdminEventCreatedEmail(Event event) {
+  public void sendAdminEventUpsertedEmail(Event event, boolean eventCreated) {
+    String createdOrUpdated = eventCreated ? "created" : "updated";
     String htmlBody = String.format(
       """
-      <p>An event has been created.</p>
+      <p>An event has been %s.</p>
       <p>
         <span style="text-decoration: underline;">Event Details:</span><br />
         <strong><em>Venue Name: </em></strong>%s<br />
@@ -86,6 +89,7 @@ public class EmailService {
         <strong><em>Email Address:</em></strong> %s
       </p>
       """,
+      createdOrUpdated,
       event.getVenue().getVenueName(),
       event.getVenue().getAddress(),
       event.getBand().getBandName(),
@@ -105,7 +109,7 @@ public class EmailService {
             .fromName("The Local Music Finder")
             .toEmail(fromEmail)
             .toName("The Local Music Finder")
-            .subject("An event has been created")
+            .subject("An event has been " + createdOrUpdated)
             .htmlBody(htmlBody).build();
     emailService.sendEmail(emailMessage);
   }
@@ -133,5 +137,21 @@ public class EmailService {
             .subject("There are potential duplicate events")
             .htmlBody(htmlBody.toString()).build();
     emailService.sendEmail(emailMessage);
+  }
+
+  public void sendErrorEmail(String subject, String htmlBody) {
+    EmailMessage emailMessage = EmailMessage.builder()
+            .fromEmail(fromEmail)
+            .fromName("The Local Music Finder")
+            .toEmail(fromEmail)
+            .toName("The Local Music Finder")
+            .subject(subject)
+            .htmlBody(htmlBody).build();
+    try {
+      emailService.sendEmail(emailMessage);
+    } catch (EmailSendException exception) {
+      logger.error("An error occurred while trying to send an error email. Error: " + exception.getMessage());
+    }
+
   }
 }
