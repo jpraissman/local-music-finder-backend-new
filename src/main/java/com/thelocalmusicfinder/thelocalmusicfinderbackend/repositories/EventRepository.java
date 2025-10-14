@@ -26,4 +26,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
           @Param("currentDate") LocalDate currentDate,
           @Param("currentTime") LocalTime currentTime
   );
+
+  void deleteByEventCode(String eventCode);
 }

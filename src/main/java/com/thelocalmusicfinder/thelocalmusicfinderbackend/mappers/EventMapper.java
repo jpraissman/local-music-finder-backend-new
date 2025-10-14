@@ -1,8 +1,9 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.BandDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.EventDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.VenueDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 
 import org.springframework.stereotype.Component;
@@ -27,5 +28,30 @@ public class EventMapper {
             .endTime(event.getEndTime())
             .coverCharge(event.getCoverCharge())
             .additionalInfo(event.getAdditionalInfo()).build();
+  }
+
+  public UpsertEventRequestDTO toUpsertEventRequestDTO(Event event) {
+    return UpsertEventRequestDTO.builder()
+            .bandName(event.getBand().getBandName())
+            .bandType(event.getBand().getBandType())
+            .tributeBandName(event.getBand().getTributeBandName())
+            .genres(event.getBand().getGenres())
+            .venueName(event.getVenue().getVenueName())
+            .address(event.getVenue().getAddress())
+            .venueFacebookUrl(event.getVenue().getFacebookUrl())
+            .venueInstagramUrl(event.getVenue().getInstagramUrl())
+            .venueWebsiteUrl(event.getVenue().getWebsiteUrl())
+            .bandFacebookUrl(event.getBand().getFacebookUrl())
+            .bandInstagramUrl(event.getBand().getInstagramUrl())
+            .bandWebsiteUrl(event.getBand().getWebsiteUrl())
+            .venuePhone(event.getVenue().getPhoneNumber())
+            .posterEmail(event.getEmail())
+            .eventDate(event.getEventDate())
+            .startTime(event.getStartTime())
+            .endTime(event.getEndTime())
+            .coverCharge(event.getCoverCharge())
+            .additionalInfo(event.getAdditionalInfo())
+            .eventCreator(event.getEventCreator())
+            .agreesToTermsAndPrivacy(event.getAgreesToTermsAndPrivacy()).build();
   }
 }

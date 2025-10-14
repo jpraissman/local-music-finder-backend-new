@@ -1,6 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.errors;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.AddressCoordinatesException;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.LoggerService;
 
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,15 @@ public class GlobalExceptionHandler {
     this.logError("Address Coordinates Exception: " + exception.getMessage(), request);
 
     ErrorResponse error = new ErrorResponse("ADDRESS_ERROR", "The given address could not be processed.");
-    return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(EventNotFound.class)
+  public ResponseEntity<ErrorResponse> handleEventNotFound(EventNotFound exception, HttpServletRequest request) {
+    this.logError("Event Not Found: " + exception.getMessage(), request);
+
+    ErrorResponse error = new ErrorResponse("EVENT_NOT_FOUND", "The given event could not be found.");
+    return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
   }
 
   // Handles @Valid on @RequestBody

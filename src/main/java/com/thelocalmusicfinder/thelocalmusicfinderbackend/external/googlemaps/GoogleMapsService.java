@@ -9,9 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 @Service
 public class GoogleMapsService {
 
@@ -28,8 +25,8 @@ public class GoogleMapsService {
 
   public GoogleMapsGeocodeResponse getGoogleMapsGeocodeResponse(String address)
           throws GoogleMapsGeocodeException {
-    String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8);
-    String queryParams = "?address=" + encodedAddress + "&key=" + googleMapsApiKey;
+    logger.info("Querying Google Maps Geocode API with address " + address);
+    String queryParams = "?address=" + address + "&key=" + googleMapsApiKey;
     String uri = "/geocode/json" +  queryParams;
     try {
       return webClient.get()
