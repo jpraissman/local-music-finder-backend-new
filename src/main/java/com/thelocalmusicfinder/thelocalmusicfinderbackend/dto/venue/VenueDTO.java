@@ -1,4 +1,4 @@
-package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto;
+package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +11,8 @@ public class VenueDTO {
   private String venueName;
 
   private String address;
+
+  private String town;
 
   private String phoneNumber;
 

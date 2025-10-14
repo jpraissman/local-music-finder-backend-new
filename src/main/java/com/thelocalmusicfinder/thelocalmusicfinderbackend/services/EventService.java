@@ -1,14 +1,10 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EventCreatorType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.EventDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.FindEventsResponseDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.UpsertEventRequestDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
@@ -25,7 +21,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,7 +37,6 @@ public class EventService {
   private final VenueService venueService;
   private final BandMapper bandMapper;
   private final VenueMapper venueMapper;
-  private final EventMapper eventMapper;
   private final EventRepository eventRepository;
   private final EmailService emailService;
   private final LoggerService logger;
@@ -62,13 +56,11 @@ public class EventService {
 
     // Upsert band
     BasicBandInfo bandInfo = bandMapper.toBasicBand(payload);
-    Band band = bandService.upsertBand(bandInfo,
-            payload.getEventCreator() == EventCreatorType.BAND);
+    Band band = bandService.upsertBand(bandInfo);
 
     // Upsert venue
     BasicVenueInfo venueInfo = venueMapper.toBasicVenueInfo(payload);
-    Venue venue = venueService.upsertVenue(venueInfo,
-            payload.getEventCreator() == EventCreatorType.VENUE);
+    Venue venue = venueService.upsertVenue(venueInfo);
 
     // Create event
     String eventCode = this.getNewEventCode(8);
@@ -112,13 +104,11 @@ public class EventService {
 
     // Upsert band
     BasicBandInfo bandInfo = bandMapper.toBasicBand(payload);
-    Band band = bandService.upsertBand(bandInfo,
-            payload.getEventCreator() == EventCreatorType.BAND);
+    Band band = bandService.upsertBand(bandInfo);
 
     // Upsert venue
     BasicVenueInfo venueInfo = venueMapper.toBasicVenueInfo(payload);
-    Venue venue = venueService.upsertVenue(venueInfo,
-            payload.getEventCreator() == EventCreatorType.VENUE);
+    Venue venue = venueService.upsertVenue(venueInfo);
 
     // Update event
     Event event = existingEvent.get();
@@ -173,20 +163,30 @@ public class EventService {
    * @param timezone timezone to search in
    */
   @Transactional
-  public FindEventsResponseDTO findEvents(String location, int distance, String timezone) {
+  public List<Event> findEvents(String location, int distance, String timezone) {
     ZoneId zone = ZoneId.of(timezone);
     ZonedDateTime zonedNow = ZonedDateTime.now(zone);
     LocalDate curDate = zonedNow.toLocalDate();
     LocalTime curTime = zonedNow.toLocalTime();
 
     List<Event> potentialEvents = eventRepository.findEventsAfter(curDate, curTime);
-    List<Event> finalEvents = mapsService.filterEventsByDistance(potentialEvents, location, distance);
+    return mapsService.filterEventsByDistance(potentialEvents, location, distance);
+  }
 
-    List<EventDTO> results = new ArrayList<>();
-    for (Event event : finalEvents) {
-      results.add(eventMapper.toEventDTO(event));
+  public Event getEvent(String eventCode) {
+    Optional<Event> event =  eventRepository.findByEventCode(eventCode);
+    if (event.isEmpty()) {
+      throw new EventNotFound("Event with eventCode " + eventCode + " not found");
     }
+    return event.get();
+  }
 
-    return new FindEventsResponseDTO(results);
+  @Transactional
+  public void deleteEvent(String eventCode) {
+    eventRepository.deleteByEventCode(eventCode);
+
+    // Delete any venues or bands that have 0 events
+    bandRepository.deleteAllWithNoEvents();
+    venueRepository.deleteAllWithNoEvents();
   }
 }

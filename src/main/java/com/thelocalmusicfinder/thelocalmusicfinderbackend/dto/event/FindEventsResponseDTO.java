@@ -1,4 +1,4 @@
-package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto;
+package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event;
 
 import java.util.List;
 

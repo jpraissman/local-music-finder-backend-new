@@ -1,11 +1,13 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.BandDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.UpsertEventRequestDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 public class BandMapper {
@@ -16,9 +18,9 @@ public class BandMapper {
             .bandType(request.getBandType())
             .tributeBandName(request.getTributeBandName())
             .genres(request.getGenres())
-            .facebookUrl(request.getFacebookUrl())
-            .instagramUrl(request.getInstagramUrl())
-            .websiteUrl(request.getWebsiteUrl())
+            .facebookUrl(request.getBandFacebookUrl())
+            .instagramUrl(request.getBandInstagramUrl())
+            .websiteUrl(request.getBandWebsiteUrl())
             .build();
   }
 

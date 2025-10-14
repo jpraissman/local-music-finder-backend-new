@@ -1,4 +1,4 @@
-package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto;
+package com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.Genre;

@@ -1,0 +1,2 @@
+ALTER TABLE event
+    ALTER COLUMN end_time DROP NOT NULL;
