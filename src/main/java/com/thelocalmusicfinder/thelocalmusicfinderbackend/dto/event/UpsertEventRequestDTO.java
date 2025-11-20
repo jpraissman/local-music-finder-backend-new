@@ -44,7 +44,7 @@ public class UpsertEventRequestDTO {
 
   @NotBlank
   @Size(min = 1, max = 255)
-  private String address;
+  private String locationId;
 
   @Size(min = 1, max = 255)
   private String venueFacebookUrl;

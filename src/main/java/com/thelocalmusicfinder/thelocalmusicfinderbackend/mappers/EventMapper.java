@@ -37,7 +37,7 @@ public class EventMapper {
             .tributeBandName(event.getBand().getTributeBandName())
             .genres(event.getBand().getGenres())
             .venueName(event.getVenue().getVenueName())
-            .address(event.getVenue().getAddress())
+            .locationId(event.getVenue().getLocation().getLocationId())
             .venueFacebookUrl(event.getVenue().getFacebookUrl())
             .venueInstagramUrl(event.getVenue().getInstagramUrl())
             .venueWebsiteUrl(event.getVenue().getWebsiteUrl())

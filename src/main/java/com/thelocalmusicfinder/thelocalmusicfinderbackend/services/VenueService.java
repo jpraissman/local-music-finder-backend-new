@@ -1,8 +1,8 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.maps.DetailedAddressInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 
@@ -27,16 +27,16 @@ public class VenueService {
   }
 
   public Venue upsertVenue(BasicVenueInfo venueInfo) {
-    // Check for existing venue based on name and coordinates
+    // Check for existing venue based on name and location
     String venueName = venueInfo.getVenueName().trim();
-    DetailedAddressInfo addressInfo = mapsService.getDetailedAddressInfo(venueInfo.getAddress());
-    Optional<Venue> existingVenue = venueRepository.findByVenueNameAndLatitudeAndLongitude(venueName,
-            addressInfo.getCoordinates().getLatitude(), addressInfo.getCoordinates().getLongitude());
+    Location venueLocation = mapsService.getLocationById(venueInfo.getLocationId());
+    Optional<Venue> existingVenue = venueRepository.findByVenueNameAndLocation(venueName, venueLocation);
 
     if (existingVenue.isPresent()) {
       return this.updateVenue(existingVenue.get(), venueInfo);
     } else {
-      return this.createVenue(venueInfo, addressInfo);
+      // TODO: Check if there is a similar named venue or one with same address?? And send email
+      return this.createVenue(venueInfo, venueLocation);
     }
   }
 
@@ -49,24 +49,19 @@ public class VenueService {
     return venueRepository.save(existingVenue);
   }
 
-  private Venue createVenue(BasicVenueInfo venueInfo, DetailedAddressInfo addressInfo) {
+  private Venue createVenue(BasicVenueInfo venueInfo, Location venueLocation) {
     Venue venue = Venue.builder()
             .venueName(venueInfo.getVenueName().trim())
-            .address(addressInfo.getFormattedAddress())
-            .county(addressInfo.getCounty())
-            .town(addressInfo.getTown())
+            .location(venueLocation)
             .facebookUrl(venueInfo.getFacebookUrl())
             .instagramUrl(venueInfo.getInstagramUrl())
             .websiteUrl(venueInfo.getWebsiteUrl())
             .phoneNumber(venueInfo.getPhoneNumber())
-            .latitude(addressInfo.getCoordinates().getLatitude())
-            .longitude(addressInfo.getCoordinates().getLongitude())
             .build();
 
-    if (addressInfo.getFormattedAddress() == null || addressInfo.getCounty() == null || addressInfo.getTown() == null) {
-      logger.error("Venue with id " + venue.getId() + " has some unknown fields for it's address information.");
-      emailService.sendErrorEmail("ERROR: Venue has some unknown address information",
-              "<p>Venue with id " + venue.getId() + " has some unknown address information.</p>");
+    if (venueLocation.getCounty() == null || venueLocation.getTown() == null) {
+      logger.error("Venue with id " + venue.getId() + " has location with id " + venueLocation.getLocationId() + " which has null values for either town or county.");
+      emailService.sendErrorEmail("ERROR: Venue has some unknown address information", "<p>Venue with id " + venue.getId() + " has some unknown address information.</p>");
     }
 
     return venueRepository.save(venue);

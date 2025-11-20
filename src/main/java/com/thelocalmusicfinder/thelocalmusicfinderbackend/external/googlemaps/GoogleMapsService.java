@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Service
 public class GoogleMapsService {
 
@@ -23,25 +26,39 @@ public class GoogleMapsService {
     this.logger = logger;
   }
 
-  public GoogleMapsGeocodeResponse getGoogleMapsGeocodeResponse(String address)
+  public GoogleMapsGeocodeResponse getGeocodeResponseByPlaceId(String placeId)
           throws GoogleMapsGeocodeException {
-    logger.info("Querying Google Maps Geocode API with address " + address);
-    String queryParams = "?address=" + address + "&key=" + googleMapsApiKey;
-    String uri = "/geocode/json" +  queryParams;
+    logger.info("Querying Google Maps Geocode API with place_id " + placeId);
+    String queryParam = "?place_id=" + placeId;
+    return getGeocodeResponseHelper(queryParam);
+  }
+
+  public GoogleMapsGeocodeResponse getGeocodeResponseByAddress(String address)
+          throws GoogleMapsGeocodeException {
+    String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8);
+    logger.info("Querying Google Maps Geocode API with address " + address
+            + " and encoded address " + encodedAddress);
+    String queryParam = "?address=" + encodedAddress;
+    return getGeocodeResponseHelper(queryParam);
+  }
+
+  private GoogleMapsGeocodeResponse getGeocodeResponseHelper(String queryParam)
+          throws GoogleMapsGeocodeException {
     try {
+      String uri = "/geocode/json" +  queryParam + "&key=" + googleMapsApiKey;
       return webClient.get()
               .uri(uri)
               .retrieve()
               .bodyToMono(GoogleMapsGeocodeResponse.class)
               .block();
     } catch (WebClientResponseException e) {
-      logger.error("GoogleMaps geocode api failed for address "
-               + address + " with status code " + e.getStatusCode()
+      logger.error("GoogleMaps geocode api failed for queryParam "
+               + queryParam + " with status code " + e.getStatusCode()
               + ".\n Response Body: " + e.getResponseBodyAsString());
       throw new GoogleMapsGeocodeException("GoogleMaps geocode api failed.");
     } catch (Exception e) {
-      logger.error("GoogleMaps geocode api failed for address "
-              + address + ". Error: " + e.getMessage());
+      logger.error("GoogleMaps geocode api failed for queryParam "
+              + queryParam + ". Error: " + e.getMessage());
       throw new GoogleMapsGeocodeException("GoogleMaps geocode api failed.");
     }
   }

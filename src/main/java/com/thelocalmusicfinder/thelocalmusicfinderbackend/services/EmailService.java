@@ -50,7 +50,7 @@ public class EmailService {
       websiteUrl + "edit",
       event.getEventCode(),
       event.getVenue().getVenueName(),
-      event.getVenue().getAddress(),
+      event.getVenue().getLocation().getFormattedAddress(),
       event.getBand().getBandName(),
       event.getBand().getBandType(),
       event.getBand().getGenres().stream().map(Enum::name).collect(Collectors.joining(", ")),
@@ -91,7 +91,7 @@ public class EmailService {
       """,
       createdOrUpdated,
       event.getVenue().getVenueName(),
-      event.getVenue().getAddress(),
+      event.getVenue().getLocation().getFormattedAddress(),
       event.getBand().getBandName(),
       event.getBand().getBandType(),
       event.getBand().getTributeBandName(),
@@ -125,7 +125,7 @@ public class EmailService {
       htmlBody.append(String.format(
               "<p>At <strong>%s</strong> with the address <strong>%s</strong>.</p>",
               event.getVenue().getVenueName(),
-              event.getVenue().getAddress()
+              event.getVenue().getLocation().getFormattedAddress()
       ));
     }
 
