@@ -59,12 +59,14 @@ public class VenueService {
             .phoneNumber(venueInfo.getPhoneNumber())
             .build();
 
+    Venue savedVenue = venueRepository.save(venue);
+
     if (venueLocation.getCounty() == null || venueLocation.getTown() == null) {
       logger.error("Venue with id " + venue.getId() + " has location with id " + venueLocation.getLocationId() + " which has null values for either town or county.");
       emailService.sendErrorEmail("ERROR: Venue has some unknown address information", "<p>Venue with id " + venue.getId() + " has some unknown address information.</p>");
     }
 
-    return venueRepository.save(venue);
+    return savedVenue;
   }
 
   public Venue getVenue(Long id) {

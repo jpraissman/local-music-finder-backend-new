@@ -26,14 +26,12 @@ public class MapsService {
     }
 
     Location queriedLocation = mapsService.getLocationInfoById(locationId);
-    locationRepository.save(queriedLocation);
-    return queriedLocation;
+    return locationRepository.save(queriedLocation);
   }
 
   public Location getLocationByAddress(String address) {
     Location location = mapsService.getLocationInfoByAddress(address);
-    locationRepository.save(location);
-    return location;
+    return locationRepository.save(location);
   }
 
   /**
