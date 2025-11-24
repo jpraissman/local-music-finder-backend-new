@@ -76,4 +76,10 @@ public class BandService {
     return band.get();
   }
 
+  public void addBandVideo(Long id, String videoId) {
+    Band band = getBand(id);
+    band.getYoutubeVideoIds().add(videoId);
+    bandRepository.save(band);
+  }
+
 }

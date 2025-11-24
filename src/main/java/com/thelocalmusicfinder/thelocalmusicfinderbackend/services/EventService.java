@@ -2,9 +2,11 @@ package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
@@ -18,9 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class EventService {
+  private final EventMapper eventMapper;
   @Value("${FROM_EMAIL}")
   private String adminEmail;
 
@@ -158,19 +161,26 @@ public class EventService {
 
   /**
    * Finds all events within {distance} miles of the given location.
-   * @param location location to search for events in
+   * @param locationId locationId to search for events in
    * @param distance distance from location (in miles)
    * @param timezone timezone to search in
    */
   @Transactional
-  public List<Event> findEvents(String location, int distance, String timezone) {
-    ZoneId zone = ZoneId.of(timezone);
-    ZonedDateTime zonedNow = ZonedDateTime.now(zone);
-    LocalDate curDate = zonedNow.toLocalDate();
-    LocalTime curTime = zonedNow.toLocalTime();
+  public List<EventDTO> findEvents(String locationId, int distance, String timezone) {
+    LocalDate todayDate = getTodayDate(timezone);
+    List<Event> potentialEvents = eventRepository.findEventsAfter(todayDate);
+    return mapsService.filterEventsByDistance(potentialEvents, locationId, distance);
+  }
 
-    List<Event> potentialEvents = eventRepository.findEventsAfter(curDate, curTime);
-    return mapsService.filterEventsByDistance(potentialEvents, location, distance);
+  public List<EventDTO> getEventsNextSevenDays(String timezone) {
+    LocalDate todayDate = getTodayDate(timezone);
+    LocalDate sevenDaysAfterToday = todayDate.plusDays(7);
+    List<Event> events = eventRepository.findEventsBetween(todayDate, sevenDaysAfterToday);
+    List<EventDTO> results =  new ArrayList<>();
+    for (Event event : events) {
+      results.add(eventMapper.toEventDTO(event));
+    }
+    return results;
   }
 
   public Event getEvent(String eventCode) {
@@ -188,5 +198,11 @@ public class EventService {
     // Delete any venues or bands that have 0 events
     bandRepository.deleteAllWithNoEvents();
     venueRepository.deleteAllWithNoEvents();
+  }
+
+  private LocalDate getTodayDate(String timezone) {
+    ZoneId zone = ZoneId.of(timezone);
+    ZonedDateTime zonedNow = ZonedDateTime.now(zone);
+    return zonedNow.toLocalDate();
   }
 }

@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,20 +30,9 @@ public class Venue {
   @Column(length = 100, nullable = false)
   private String venueName;
 
-  @Column(length = 500, nullable = false)
-  private String address;
-
-  @Column(nullable = false)
-  private Double latitude;
-
-  @Column(nullable = false)
-  private Double longitude;
-
-  @Column(nullable = false)
-  private String county;
-
-  @Column(nullable = false)
-  private String town;
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "location_id", referencedColumnName = "locationId", nullable = false)
+  private Location location;
 
   @Column()
   private String phoneNumber;

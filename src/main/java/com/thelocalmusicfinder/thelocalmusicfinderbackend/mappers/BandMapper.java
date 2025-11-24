@@ -34,7 +34,7 @@ public class BandMapper {
             .facebookUrl(band.getFacebookUrl())
             .instagramUrl(band.getInstagramUrl())
             .websiteUrl(band.getWebsiteUrl())
-            .youtubeVideoIds(band.getYoutube_video_ids()).build();
+            .youtubeVideoIds(band.getYoutubeVideoIds()).build();
   }
 
 }

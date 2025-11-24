@@ -1,19 +1,12 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.location.LocationDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueWithEventsDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import lombok.RequiredArgsConstructor;
 
 @Component
 public class VenueMapper {
@@ -21,7 +14,7 @@ public class VenueMapper {
   public BasicVenueInfo toBasicVenueInfo(UpsertEventRequestDTO request) {
     return BasicVenueInfo.builder()
             .venueName(request.getVenueName())
-            .address(request.getAddress())
+            .locationId(request.getLocation().getLocationId())
             .facebookUrl(request.getVenueFacebookUrl())
             .instagramUrl(request.getVenueInstagramUrl())
             .websiteUrl(request.getVenueWebsiteUrl())
@@ -33,8 +26,8 @@ public class VenueMapper {
     return VenueDTO.builder()
             .id(venue.getId())
             .venueName(venue.getVenueName())
-            .address(venue.getAddress())
-            .town(venue.getTown())
+            .location(new LocationDTO(venue.getLocation().getLocationId(), venue.getLocation().getFormattedAddress()))
+            .town(venue.getLocation().getTown())
             .phoneNumber(venue.getPhoneNumber())
             .facebookUrl(venue.getFacebookUrl())
             .instagramUrl(venue.getInstagramUrl())

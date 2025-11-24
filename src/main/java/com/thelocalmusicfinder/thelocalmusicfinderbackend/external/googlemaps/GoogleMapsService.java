@@ -23,11 +23,11 @@ public class GoogleMapsService {
     this.logger = logger;
   }
 
-  public GoogleMapsGeocodeResponse getGoogleMapsGeocodeResponse(String address)
-          throws GoogleMapsGeocodeException {
-    logger.info("Querying Google Maps Geocode API with address " + address);
-    String queryParams = "?address=" + address + "&key=" + googleMapsApiKey;
-    String uri = "/geocode/json" +  queryParams;
+  public GoogleMapsGeocodeResponse getGeocodeResponseByPlaceId(String placeId) throws GoogleMapsGeocodeException {
+    logger.info("Querying Google Maps Geocode API with place_id " + placeId);
+    String queryParam = "?place_id=" + placeId + "&key=" + googleMapsApiKey;
+    String uri = "/geocode/json" +  queryParam;
+
     try {
       return webClient.get()
               .uri(uri)
@@ -35,13 +35,10 @@ public class GoogleMapsService {
               .bodyToMono(GoogleMapsGeocodeResponse.class)
               .block();
     } catch (WebClientResponseException e) {
-      logger.error("GoogleMaps geocode api failed for address "
-               + address + " with status code " + e.getStatusCode()
-              + ".\n Response Body: " + e.getResponseBodyAsString());
+      logger.error("GoogleMaps geocode api failed for place_id " + placeId + " with status code " + e.getStatusCode() + ".\n Response Body: " + e.getResponseBodyAsString());
       throw new GoogleMapsGeocodeException("GoogleMaps geocode api failed.");
     } catch (Exception e) {
-      logger.error("GoogleMaps geocode api failed for address "
-              + address + ". Error: " + e.getMessage());
+      logger.error("GoogleMaps geocode api failed for place_id " + placeId + ". Error: " + e.getMessage());
       throw new GoogleMapsGeocodeException("GoogleMaps geocode api failed.");
     }
   }

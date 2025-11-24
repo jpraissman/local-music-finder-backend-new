@@ -9,7 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class BasicVenueInfo {
   private final String venueName;
-  private final String address;
+  private final String locationId;
   private final String facebookUrl;
   private final String instagramUrl;
   private final String websiteUrl;

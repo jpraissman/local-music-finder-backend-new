@@ -61,7 +61,7 @@ public class Band {
   @ElementCollection
   @CollectionTable(name = "band_youtube_video_ids", joinColumns = @JoinColumn(name = "band_id"))
   @Column(name = "youtube_video_id")
-  private List<String> youtube_video_ids = new ArrayList<>();
+  private List<String> youtubeVideoIds = new ArrayList<>();
 
   @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default

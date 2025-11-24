@@ -1,6 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.errors;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.AddressCoordinatesException;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.LocationQueryException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.LoggerService;
 
@@ -30,9 +30,9 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  @ExceptionHandler(AddressCoordinatesException.class)
-  public ResponseEntity<ErrorResponse> handleAddressCoordinatesException(AddressCoordinatesException exception, HttpServletRequest request) {
-    this.logError("Address Coordinates Exception: " + exception.getMessage(), request);
+  @ExceptionHandler(LocationQueryException.class)
+  public ResponseEntity<ErrorResponse> handleAddressCoordinatesException(LocationQueryException exception, HttpServletRequest request) {
+    this.logError("Location Query Exception: " + exception.getMessage(), request);
 
     ErrorResponse error = new ErrorResponse("ADDRESS_ERROR", "The given address could not be processed.");
     return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);

@@ -1,12 +1,11 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.adapters.driven;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.maps.Coordinates;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.maps.DetailedAddressInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.AddressCoordinatesException;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.LocationQueryException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.external.googlemaps.GoogleMapsService;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.external.googlemaps.exceptions.GoogleMapsGeocodeException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.external.googlemaps.types.AddressComponent;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.external.googlemaps.types.GoogleMapsGeocodeResponse;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.ports.driven.ForFetchingMapInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.LoggerService;
 
@@ -23,50 +22,28 @@ public class ForFetchingGoogleMapsInfo implements ForFetchingMapInfo {
   private final LoggerService logger;
 
   @Override
-  public Coordinates getAddressCoordinates(String address) {
-    GoogleMapsGeocodeResponse response = getGoogleMapsGeocodeResponse(address);
-    return getAddressCoordinatesHelper(address, response);
-  }
-
-  private Coordinates getAddressCoordinatesHelper(String address, GoogleMapsGeocodeResponse response) {
+  public Location getLocationInfoById(String locationId) throws LocationQueryException {
     try {
-      logger.info("Getting address coordinates for address " + address
-              + ". Response: " + response.toString());
+      GoogleMapsGeocodeResponse geocodeResponse = this.googleMapsService.getGeocodeResponseByPlaceId(locationId);
 
-      if (response.getResults().isEmpty()) {
-        logger.error("GoogleMapsGeocodeResponse is empty for address " + address
-                + ". Response: " + response.toString());
-        throw new AddressCoordinatesException("GoogleMapsGeocodeResponse is empty");
+      logger.info("Got the following geocodeResponse from locationId=" + locationId + ": " + geocodeResponse);
+
+      if (geocodeResponse.getResults().isEmpty()) {
+        logger.error("GoogleMapsGeocodeResponse is empty for locationId=" + locationId + ". Response: " + geocodeResponse);
+        throw new LocationQueryException("GoogleMapsGeocodeResponse is empty");
       }
-      if (response.getResults().size() > 1) {
-        logger.warn("GoogleMapsGeocodeResponse is more than 1 result for address " + address
-                + ". Response: " + response.toString());
+      if (geocodeResponse.getResults().size() > 1) {
+        logger.warn("GoogleMapsGeocodeResponse has more than 1 result for locationId=" + locationId + ". Response: " + geocodeResponse);
       }
 
-      Double lat = response.getResults().getFirst().getGeometry().getLocation().getLat();
-      Double lng = response.getResults().getFirst().getGeometry().getLocation().getLng();
-      return new Coordinates(lat, lng);
-    } catch (AddressCoordinatesException e) {
-      throw e;
-    } catch (Exception e) {
-      logger.error("Error fetching Coordinates for address " + address
-              + ". Error: " + e.getMessage());
-      throw new AddressCoordinatesException("Error fetching Coordinates for address");
-    }
-  }
+      String placeId = geocodeResponse.getResults().getFirst().getPlaceId();
+      Double lat = geocodeResponse.getResults().getFirst().getGeometry().getLocation().getLat();
+      Double lng = geocodeResponse.getResults().getFirst().getGeometry().getLocation().getLng();
+      String formattedAddress = geocodeResponse.getResults().getFirst().getFormattedAddress();
 
-  @Override
-  public DetailedAddressInfo getDetailedAddressInfo(String address) {
-    GoogleMapsGeocodeResponse response = getGoogleMapsGeocodeResponse(address);
-    Coordinates coordinates = getAddressCoordinatesHelper(address, response);
-
-    // Get the rest of the address information
-    try {
-      String formattedAddress = response.getResults().getFirst().getFormattedAddress();
-
-      String town = "Unknown";
-      String county = "Unknown";
-      List<AddressComponent> addressComponents = response.getResults().getFirst().getAddressComponents();
+      String town = null;
+      String county = null;
+      List<AddressComponent> addressComponents = geocodeResponse.getResults().getFirst().getAddressComponents();
       for (AddressComponent addressComponent : addressComponents) {
         if (addressComponent.getTypes().contains("locality")) {
           town = addressComponent.getLongName();
@@ -76,30 +53,21 @@ public class ForFetchingGoogleMapsInfo implements ForFetchingMapInfo {
         }
       }
 
-      return DetailedAddressInfo.builder()
-              .coordinates(coordinates)
+      return Location.builder()
+              .locationId(placeId)
+              .latitude(lat)
+              .longitude(lng)
               .formattedAddress(formattedAddress)
               .town(town)
               .county(county).build();
+    } catch (LocationQueryException e) {
+      throw e;
+    } catch (GoogleMapsGeocodeException e) {
+      logger.error("Error getting GoogleMapsGeocodeResponse from GoogleMapsService for locationId "+ locationId + ". Error message: " + e.getMessage());
+      throw new LocationQueryException("Error fetching coordinates for locationId " + locationId);
     } catch (Exception e) {
-      logger.warn("Error fetching detailed address info for address " + address
-      + ". Error: " + e.getMessage() + ". Setting unknown fields to Unknown.");
-      return DetailedAddressInfo.builder()
-              .coordinates(coordinates)
-              .formattedAddress("Unknown")
-              .town("Unknown")
-              .county("Unknown")
-              .build();
-    }
-  }
-
-  private GoogleMapsGeocodeResponse getGoogleMapsGeocodeResponse(String address) {
-    try {
-      return googleMapsService.getGoogleMapsGeocodeResponse(address);
-    } catch  (GoogleMapsGeocodeException e) {
-      logger.error("Error getting GoogleMapsGeocodeResponse from GoogleMapsService for address "
-              + address + ". Error message: " + e.getMessage());
-      throw new AddressCoordinatesException("Error fetching coordinates for address");
+      logger.error("Error getting location information for locationId=" + locationId + ". Error: " + e.getMessage());
+      throw new LocationQueryException("Error fetching location information");
     }
   }
 }

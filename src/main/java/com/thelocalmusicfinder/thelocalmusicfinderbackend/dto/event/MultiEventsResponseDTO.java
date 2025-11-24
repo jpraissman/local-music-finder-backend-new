@@ -7,6 +7,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class FindEventsResponseDTO {
+public class MultiEventsResponseDTO {
   List<EventDTO> events;
 }
