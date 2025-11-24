@@ -19,12 +19,18 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
   @Query("""
   SELECT e FROM Event e
-  WHERE e.eventDate > :currentDate
-     OR (e.eventDate = :currentDate AND e.startTime > :currentTime)
+  WHERE e.eventDate >= :startDate
   """)
-  List<Event> findEventsAfter(
-          @Param("currentDate") LocalDate currentDate,
-          @Param("currentTime") LocalTime currentTime
+  List<Event> findEventsAfter(@Param("currentDate") LocalDate startDate);
+
+  @Query("""
+  SELECT e FROM Event e
+  WHERE e.eventDate >= :startDate
+    AND e.eventDate <= :endDate
+  """)
+  List<Event> findEventsBetween(
+          @Param("startDate") LocalDate startDate,
+          @Param("endDate") LocalDate endDate
   );
 
   void deleteByEventCode(String eventCode);

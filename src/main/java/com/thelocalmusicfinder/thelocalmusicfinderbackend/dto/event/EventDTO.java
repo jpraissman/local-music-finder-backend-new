@@ -31,4 +31,6 @@ public class EventDTO {
   private Double coverCharge;
 
   private String additionalInfo;
+
+  private Double distanceInMiles;
 }

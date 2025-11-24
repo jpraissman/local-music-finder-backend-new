@@ -11,11 +11,4 @@ public interface ForFetchingMapInfo {
    * @throws LocationQueryException if the coordinates or formattedAddress could not be determined
    */
   Location getLocationInfoById(String locationId) throws LocationQueryException;
-
-  /**
-   * Returns location information about the given address.
-   * Will set town and county to null if it could not determine those values.
-   * @throws LocationQueryException if the coordinates or formattedAddress could not be determined
-   */
-  Location getLocationInfoByAddress(String address) throws LocationQueryException;
 }

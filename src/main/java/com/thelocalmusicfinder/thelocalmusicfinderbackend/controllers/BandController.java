@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,5 +48,11 @@ public class BandController {
   public ResponseEntity<BandWithEventsDTO> getBand(@PathVariable Long id) {
     Band band = bandService.getBand(id);
     return ResponseEntity.status(HttpStatus.OK).body(topLevelBandMapper.toBandWithEventsDTO(band));
+  }
+
+  @PostMapping("/{id}/add-video/{videoId}")
+  public ResponseEntity<Void> addBandVideo(@PathVariable Long id, @PathVariable String videoId) {
+    bandService.addBandVideo(id, videoId);
+    return  ResponseEntity.ok().build();
   }
 }

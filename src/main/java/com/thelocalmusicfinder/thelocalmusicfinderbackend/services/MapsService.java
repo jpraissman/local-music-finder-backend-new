@@ -1,5 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.ports.driven.ForFetchingMapInfo;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class MapsService {
   private final ForFetchingMapInfo mapsService;
   private final LocationRepository locationRepository;
+  private final EventMapper eventMapper;
 
   public Location getLocationById(String locationId) {
     Optional<Location> optionalLocation = locationRepository.findById(locationId);
@@ -29,11 +32,6 @@ public class MapsService {
     return locationRepository.save(queriedLocation);
   }
 
-  public Location getLocationByAddress(String address) {
-    Location location = mapsService.getLocationInfoByAddress(address);
-    return locationRepository.save(location);
-  }
-
   /**
    * Returns a list of events within {distance} miles of the given location
    * @param events events to filter
@@ -41,10 +39,10 @@ public class MapsService {
    * @param locationId locationId of location to search in
    * @return list of events within {distance} miles of the given location
    */
-  public List<Event> filterEventsByDistance(List<Event> events, String locationId, int distance) {
+  public List<EventDTO> filterEventsByDistance(List<Event> events, String locationId, int distance) {
     Location location = getLocationById(locationId);
 
-    List<Event> filteredEvents = new ArrayList<>();
+    List<EventDTO> filteredEvents = new ArrayList<>();
     for (Event event : events) {
       double approxDrivingDistance = approxDrivingDistance(
               event.getVenue().getLocation().getLatitude(),
@@ -52,7 +50,9 @@ public class MapsService {
               event.getVenue().getLocation().getLongitude(),
               location.getLongitude());
       if (approxDrivingDistance <= distance) {
-        filteredEvents.add(event);
+        EventDTO eventToAdd = eventMapper.toEventDTO(event);
+        eventToAdd.setDistanceInMiles(approxDrivingDistance);
+        filteredEvents.add(eventToAdd);
       }
     }
 

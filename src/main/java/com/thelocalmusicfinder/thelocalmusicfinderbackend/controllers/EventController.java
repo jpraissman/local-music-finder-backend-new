@@ -1,7 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.controllers;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.FindEventsResponseDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.MultiEventsResponseDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.CreateEventResponseDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -63,18 +62,20 @@ public class EventController {
   }
 
   @GetMapping("/find")
-  public ResponseEntity<FindEventsResponseDTO> findEvents(
-          @RequestParam String address,
+  public ResponseEntity<MultiEventsResponseDTO> findEvents(
+          @RequestParam String locationId,
           @RequestParam(required = false, defaultValue = "100") int distance,
           @RequestParam(required = false, defaultValue = "America/New_York") String timezone) {
-    List<Event> rawEvents = eventService.findEvents(address, distance, timezone);
+    List<EventDTO> events = eventService.findEvents(locationId, distance, timezone);
+    MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
 
-    List<EventDTO> finalEvents = new ArrayList<>();
-    for (Event event : rawEvents) {
-      finalEvents.add(eventMapper.toEventDTO(event));
-    }
-    FindEventsResponseDTO response = new FindEventsResponseDTO(finalEvents);
-
+  @GetMapping("/next-seven-days")
+  public ResponseEntity<MultiEventsResponseDTO> getEventsNextSevenDays(
+          @RequestParam(required = false, defaultValue = "America/New_York") String timezone) {
+    List<EventDTO> events = eventService.getEventsNextSevenDays(timezone);
+    MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
     return ResponseEntity.status(HttpStatus.OK).body(response);
   }
 }

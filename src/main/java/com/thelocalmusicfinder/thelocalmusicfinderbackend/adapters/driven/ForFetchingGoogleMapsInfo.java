@@ -23,26 +23,17 @@ public class ForFetchingGoogleMapsInfo implements ForFetchingMapInfo {
 
   @Override
   public Location getLocationInfoById(String locationId) throws LocationQueryException {
-    return getLocationInfo(locationId, true);
-  }
-
-  @Override
-  public Location getLocationInfoByAddress(String address) throws LocationQueryException {
-    return getLocationInfo(address, false);
-  }
-
-  private Location getLocationInfo(String input, boolean isLocationId) {
     try {
-      GoogleMapsGeocodeResponse geocodeResponse = getGoogleMapsGeocodeResponse(input, isLocationId);
+      GoogleMapsGeocodeResponse geocodeResponse = this.googleMapsService.getGeocodeResponseByPlaceId(locationId);
 
-      logger.info("Got the following geocodeResponse from input=" + input + ": " + geocodeResponse.toString());
+      logger.info("Got the following geocodeResponse from locationId=" + locationId + ": " + geocodeResponse);
 
       if (geocodeResponse.getResults().isEmpty()) {
-        logger.error("GoogleMapsGeocodeResponse is empty for input=" + input + ". Response: " + geocodeResponse.toString());
+        logger.error("GoogleMapsGeocodeResponse is empty for locationId=" + locationId + ". Response: " + geocodeResponse);
         throw new LocationQueryException("GoogleMapsGeocodeResponse is empty");
       }
       if (geocodeResponse.getResults().size() > 1) {
-        logger.warn("GoogleMapsGeocodeResponse has more than 1 result for input=" + input + ". Response: " + geocodeResponse.toString());
+        logger.warn("GoogleMapsGeocodeResponse has more than 1 result for locationId=" + locationId + ". Response: " + geocodeResponse);
       }
 
       String placeId = geocodeResponse.getResults().getFirst().getPlaceId();
@@ -71,22 +62,12 @@ public class ForFetchingGoogleMapsInfo implements ForFetchingMapInfo {
               .county(county).build();
     } catch (LocationQueryException e) {
       throw e;
+    } catch (GoogleMapsGeocodeException e) {
+      logger.error("Error getting GoogleMapsGeocodeResponse from GoogleMapsService for locationId "+ locationId + ". Error message: " + e.getMessage());
+      throw new LocationQueryException("Error fetching coordinates for locationId " + locationId);
     } catch (Exception e) {
-      logger.error("Error getting location information for input=" + input + ". Error: " + e.getMessage());
+      logger.error("Error getting location information for locationId=" + locationId + ". Error: " + e.getMessage());
       throw new LocationQueryException("Error fetching location information");
-    }
-  }
-
-  private GoogleMapsGeocodeResponse getGoogleMapsGeocodeResponse(String input, boolean isLocationId) {
-    try {
-      if (isLocationId)
-        return googleMapsService.getGeocodeResponseByPlaceId(input);
-      else
-        return googleMapsService.getGeocodeResponseByAddress(input);
-    } catch  (GoogleMapsGeocodeException e) {
-      String queryType = isLocationId ? "locationId" : "address";
-      logger.error("Error getting GoogleMapsGeocodeResponse from GoogleMapsService for " + queryType + " " + input + ". Error message: " + e.getMessage());
-      throw new LocationQueryException("Error fetching coordinates for " + queryType);
     }
   }
 }

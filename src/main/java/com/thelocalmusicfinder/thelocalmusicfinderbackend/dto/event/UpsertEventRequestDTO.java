@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EventCreatorType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.Genre;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.location.LocationDTO;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -42,9 +43,8 @@ public class UpsertEventRequestDTO {
   @Size(min = 1, max = 100)
   private String venueName;
 
-  @NotBlank
-  @Size(min = 1, max = 255)
-  private String locationId;
+  @NotNull
+  private LocationDTO location;
 
   @Size(min = 1, max = 255)
   private String venueFacebookUrl;
