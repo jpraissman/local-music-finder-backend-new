@@ -9,6 +9,9 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -16,6 +19,14 @@ import lombok.RequiredArgsConstructor;
 public class EventMapper {
   private final BandMapper bandMapper;
   private final VenueMapper venueMapper;
+
+  public List<EventDTO> toEventDTOs(List<Event> events) {
+    List<EventDTO> eventDTOs = new ArrayList<>();
+    for (Event event : events) {
+      eventDTOs.add(toEventDTO(event));
+    }
+    return eventDTOs;
+  }
 
   public EventDTO toEventDTO(Event event) {
     BandDTO bandDTO = bandMapper.toBandDTO(event.getBand());

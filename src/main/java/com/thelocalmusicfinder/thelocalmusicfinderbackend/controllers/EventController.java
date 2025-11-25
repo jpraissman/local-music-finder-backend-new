@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -75,6 +76,27 @@ public class EventController {
   public ResponseEntity<MultiEventsResponseDTO> getEventsNextSevenDays(
           @RequestParam(required = false, defaultValue = "America/New_York") String timezone) {
     List<EventDTO> events = eventService.getEventsNextSevenDays(timezone);
+    MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+  @GetMapping("/county/{countyName}")
+  public ResponseEntity<MultiEventsResponseDTO> getEventsByCounty(
+          @PathVariable("countyName") String countyName,
+          @RequestParam(required = false, defaultValue = "America/New_York") String timezone,
+          @RequestParam(required = false, defaultValue = "30") int numDays) {
+    List<EventDTO> events = eventService.getEventsByCounty(countyName, timezone, numDays);
+    MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+  @GetMapping("/ids/{ids}")
+  public ResponseEntity<MultiEventsResponseDTO> getEventsByIds(@PathVariable("ids") String ids) {
+    List<Long> idsAsList = new ArrayList<>();
+    for (String id : ids.split(",")) {
+      idsAsList.add(Long.parseLong(id));
+    }
+    List<EventDTO> events = eventService.getEventsByIds(idsAsList);
     MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
     return ResponseEntity.status(HttpStatus.OK).body(response);
   }

@@ -32,10 +32,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class EventService {
-  private final EventMapper eventMapper;
   @Value("${FROM_EMAIL}")
   private String adminEmail;
+  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  private static final SecureRandom random = new SecureRandom();
 
+  private final EventMapper eventMapper;
   private final BandService bandService;
   private final VenueService venueService;
   private final BandMapper bandMapper;
@@ -46,9 +48,6 @@ public class EventService {
   private final BandRepository bandRepository;
   private final VenueRepository venueRepository;
   private final MapsService mapsService;
-
-  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  private static final SecureRandom random = new SecureRandom();
 
   /**
    * @return eventCode of the created event
@@ -168,19 +167,27 @@ public class EventService {
   @Transactional
   public List<EventDTO> findEvents(String locationId, int distance, String timezone) {
     LocalDate todayDate = getTodayDate(timezone);
-    List<Event> potentialEvents = eventRepository.findEventsAfter(todayDate);
+    List<Event> potentialEvents = eventRepository.findByEventDateGreaterThanEqual(todayDate);
     return mapsService.filterEventsByDistance(potentialEvents, locationId, distance);
   }
 
   public List<EventDTO> getEventsNextSevenDays(String timezone) {
     LocalDate todayDate = getTodayDate(timezone);
     LocalDate sevenDaysAfterToday = todayDate.plusDays(7);
-    List<Event> events = eventRepository.findEventsBetween(todayDate, sevenDaysAfterToday);
-    List<EventDTO> results =  new ArrayList<>();
-    for (Event event : events) {
-      results.add(eventMapper.toEventDTO(event));
-    }
-    return results;
+    List<Event> events = eventRepository.findByEventDateBetween(todayDate, sevenDaysAfterToday);
+    return eventMapper.toEventDTOs(events);
+  }
+
+  public List<EventDTO> getEventsByCounty(String county, String timezone, int numDays) {
+    LocalDate todayDate = getTodayDate(timezone);
+    LocalDate thirtyDaysAfterToday = todayDate.plusDays(numDays);
+    List<Event> events = eventRepository.findByEventDateBetweenAndVenue_Location_County(todayDate, thirtyDaysAfterToday, county);
+    return eventMapper.toEventDTOs(events);
+  }
+
+  public List<EventDTO> getEventsByIds(List<Long> ids) {
+    List<Event> events = eventRepository.findByIdIn(ids);
+    return eventMapper.toEventDTOs(events);
   }
 
   public Event getEvent(String eventCode) {
