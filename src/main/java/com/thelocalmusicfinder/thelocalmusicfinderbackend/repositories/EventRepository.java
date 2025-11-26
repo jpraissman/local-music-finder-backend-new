@@ -20,7 +20,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
   List<Event> findByEventDateBetween(LocalDate startDate, LocalDate endDate);
 
-  List<Event> findByEventDateBetweenAndVenue_Location_County(LocalDate startDate, LocalDate endDate, String countyName);
+  List<Event> findByEventDateBetweenAndVenue_Location_CountyIn(LocalDate startDate, LocalDate endDate, List<String> counties);
 
   void deleteByEventCode(String eventCode);
 }

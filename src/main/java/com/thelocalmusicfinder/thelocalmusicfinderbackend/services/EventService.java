@@ -178,10 +178,10 @@ public class EventService {
     return eventMapper.toEventDTOs(events);
   }
 
-  public List<EventDTO> getEventsByCounty(String county, String timezone, int numDays) {
+  public List<EventDTO> getEventsByCounties(List<String> counties, String timezone, int numDays) {
     LocalDate todayDate = getTodayDate(timezone);
     LocalDate thirtyDaysAfterToday = todayDate.plusDays(numDays);
-    List<Event> events = eventRepository.findByEventDateBetweenAndVenue_Location_County(todayDate, thirtyDaysAfterToday, county);
+    List<Event> events = eventRepository.findByEventDateBetweenAndVenue_Location_CountyIn(todayDate, thirtyDaysAfterToday, counties);
     return eventMapper.toEventDTOs(events);
   }
 
