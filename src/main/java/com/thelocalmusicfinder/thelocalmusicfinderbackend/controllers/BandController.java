@@ -1,5 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.controllers;
 
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.AddVideoRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandWithEventsDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.GetBandsDTO;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,9 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/bands")
 @RequiredArgsConstructor
@@ -50,9 +52,9 @@ public class BandController {
     return ResponseEntity.status(HttpStatus.OK).body(topLevelBandMapper.toBandWithEventsDTO(band));
   }
 
-  @PostMapping("/{id}/add-video/{videoId}")
-  public ResponseEntity<Void> addBandVideo(@PathVariable Long id, @PathVariable String videoId) {
-    bandService.addBandVideo(id, videoId);
+  @PostMapping("/{id}/add-video")
+  public ResponseEntity<Void> addBandVideo(@PathVariable Long id, @Valid @RequestBody AddVideoRequestDTO addVideoRequest) {
+    bandService.addBandVideo(id, addVideoRequest.getYoutubeUrl());
     return  ResponseEntity.ok().build();
   }
 }
