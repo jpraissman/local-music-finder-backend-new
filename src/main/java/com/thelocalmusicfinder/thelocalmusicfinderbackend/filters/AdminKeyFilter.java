@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Order(1)
 public class AdminKeyFilter extends OncePerRequestFilter {
 
-  @Value("${ADMIN_KEY}")
+  @Value("${admin.key}")
   private String adminKey;
 
   @Override
