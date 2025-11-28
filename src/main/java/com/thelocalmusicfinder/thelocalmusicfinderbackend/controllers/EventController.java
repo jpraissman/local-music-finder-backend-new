@@ -28,7 +28,6 @@ import java.util.List;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
@@ -77,6 +76,15 @@ public class EventController {
   public ResponseEntity<MultiEventsResponseDTO> getEventsNextSevenDays(
           @RequestParam(required = false, defaultValue = "America/New_York") String timezone) {
     List<EventDTO> events = eventService.getEventsNextSevenDays(timezone);
+    MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+  @GetMapping("/random")
+  public ResponseEntity<MultiEventsResponseDTO> getEventsRandom(
+          @RequestParam(required = false, defaultValue = "3") int numEvents,
+          @RequestParam(required = false, defaultValue = "America/New_York") String timezone) {
+    List<EventDTO> events = eventService.getRandomEvents(numEvents, timezone);
     MultiEventsResponseDTO response = new MultiEventsResponseDTO(events);
     return ResponseEntity.status(HttpStatus.OK).body(response);
   }

@@ -1,6 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
@@ -76,5 +77,25 @@ public class VenueService {
     }
 
     return venue.get();
+  }
+
+  public void editVenue(VenueDTO venueDTO) {
+    Optional<Venue> optionalVenue = venueRepository.findById(venueDTO.getId());
+    if (optionalVenue.isEmpty()) {
+      throw new VenueNotFound("Venue with id " + venueDTO.getId() + " not found.");
+    }
+
+    Venue venue = optionalVenue.get();
+    String newVenueName = venue.getVenueName().trim();
+    Location newVenueLocation = mapsService.getLocationById(venue.getLocation().getLocationId());
+
+    venue.setVenueName(newVenueName);
+    venue.setLocation(newVenueLocation);
+    venue.setFacebookUrl(venueDTO.getFacebookUrl());
+    venue.setInstagramUrl(venueDTO.getInstagramUrl());
+    venue.setWebsiteUrl(venueDTO.getWebsiteUrl());
+    venue.setPhoneNumber(venueDTO.getPhoneNumber());
+
+    venueRepository.save(venue);
   }
 }

@@ -36,11 +36,11 @@ public class Event {
   @Column(length = 20, nullable = false, unique = true)
   private String eventCode;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "band_id", nullable = false)
   private Band band;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "venue_id", nullable = false)
   private Venue venue;
 

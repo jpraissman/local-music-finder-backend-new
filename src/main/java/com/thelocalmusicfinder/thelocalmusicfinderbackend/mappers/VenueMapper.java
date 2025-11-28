@@ -31,7 +31,8 @@ public class VenueMapper {
             .phoneNumber(venue.getPhoneNumber())
             .facebookUrl(venue.getFacebookUrl())
             .instagramUrl(venue.getInstagramUrl())
-            .websiteUrl(venue.getWebsiteUrl()).build();
+            .websiteUrl(venue.getWebsiteUrl())
+            .county(venue.getLocation().getCounty()).build();
   }
 
 }

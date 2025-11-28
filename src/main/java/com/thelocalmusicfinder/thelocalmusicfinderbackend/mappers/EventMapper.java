@@ -1,6 +1,7 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.AdminEventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.location.LocationDTO;
@@ -26,6 +27,21 @@ public class EventMapper {
       eventDTOs.add(toEventDTO(event));
     }
     return eventDTOs;
+  }
+
+  public AdminEventDTO toAdminEventDTO(Event event) {
+    BandDTO bandDTO = bandMapper.toBandDTO(event.getBand());
+    VenueDTO venueDTO = venueMapper.toVenueDTO(event.getVenue());
+    return AdminEventDTO.builder()
+            .id(event.getId())
+            .venue(venueDTO)
+            .band(bandDTO)
+            .eventDate(event.getEventDate())
+            .startTime(event.getStartTime())
+            .endTime(event.getEndTime())
+            .coverCharge(event.getCoverCharge())
+            .additionalInfo(event.getAdditionalInfo())
+            .eventCode(event.getEventCode()).build();
   }
 
   public EventDTO toEventDTO(Event event) {

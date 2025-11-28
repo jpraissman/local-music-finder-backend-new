@@ -7,11 +7,11 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 public class EventDTO {
   private Long id;
 

@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,11 +172,29 @@ public class EventService {
     return mapsService.filterEventsByDistance(potentialEvents, locationId, distance);
   }
 
+  public List<Event> getAllFutureEvents(String timezone) {
+    LocalDate todayDate = getTodayDate(timezone);
+    return eventRepository.findByEventDateGreaterThanEqual(todayDate);
+  }
+
   public List<EventDTO> getEventsNextSevenDays(String timezone) {
     LocalDate todayDate = getTodayDate(timezone);
     LocalDate sevenDaysAfterToday = todayDate.plusDays(7);
     List<Event> events = eventRepository.findByEventDateBetween(todayDate, sevenDaysAfterToday);
     return eventMapper.toEventDTOs(events);
+  }
+
+  public List<EventDTO> getRandomEvents(int numEvents, String timezone) {
+    LocalDate todayDate = getTodayDate(timezone);
+    LocalDate twoDaysAfterToday = todayDate.plusDays(2);
+    List<Event> potentialEvents = eventRepository.findByEventDateBetween(todayDate, twoDaysAfterToday);
+
+    if (potentialEvents.isEmpty()) {
+      return List.of();
+    }
+    Collections.shuffle(potentialEvents);
+    int limit = Math.min(numEvents, potentialEvents.size());
+    return eventMapper.toEventDTOs(potentialEvents.subList(0, limit));
   }
 
   public List<EventDTO> getEventsByCounties(List<String> counties, String timezone, int numDays) {
