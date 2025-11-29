@@ -45,6 +45,7 @@ public class Band {
   private String tributeBandName;
 
   @ElementCollection
+  @Enumerated(EnumType.STRING)
   @CollectionTable(name = "band_genres", joinColumns = @JoinColumn(name = "band_id"))
   @Column(name = "genre")
   private List<Genre> genres = new ArrayList<>();
