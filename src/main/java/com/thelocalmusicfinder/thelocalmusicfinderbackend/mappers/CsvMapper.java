@@ -1,21 +1,31 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.Genre;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
 
 import org.springframework.stereotype.Component;
 
+import java.io.StringWriter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class CsvMapper {
 
   public String toEventsCsv(List<Event> events) {
-    StringBuilder sb = new StringBuilder();
+    StringWriter stringWriter = new StringWriter();
 
-    sb.append(String.join(",",
+    CsvWriterSettings csvSettings = new CsvWriterSettings();
+    csvSettings.setQuoteAllFields(true);
+
+    CsvWriter writer = new CsvWriter(stringWriter, csvSettings);
+    writer.writeHeaders(
             "eventId",
             "eventCode",
             "bandId",
@@ -28,47 +38,56 @@ public class CsvMapper {
             "address",
             "town",
             "county",
-            "createdAt",
+            "createdDate",
             "email",
             "eventDate",
             "startTime",
             "endTime",
             "coverCharge",
             "additionalInfo",
-            "eventCreator"
-    )).append("\n");
+            "eventCreator");
 
+    DateTimeFormatter dateDayFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     for (Event e : events) {
-      sb.append(escape(e.getId()))
-              .append(",").append(escape(e.getEventCode()))
-              .append(",").append(escape(e.getBand().getId()))
-              .append(",").append(escape(e.getBand().getBandName()))
-              .append(",").append(escape(e.getBand().getBandType()))
-              .append(",").append(escape(e.getBand().getTributeBandName()))
-              .append(",").append(escape(listToString(e.getBand().getGenres())))
-              .append(",").append(escape(e.getVenue().getId()))
-              .append(",").append(escape(e.getVenue().getVenueName()))
-              .append(",").append(escape(e.getVenue().getLocation().getFormattedAddress()))
-              .append(",").append(escape(e.getVenue().getLocation().getTown()))
-              .append(",").append(escape(e.getVenue().getLocation().getCounty()))
-              .append(",").append(escape(e.getCreatedAt()))
-              .append(",").append(escape(e.getEmail()))
-              .append(",").append(escape(e.getEventDate()))
-              .append(",").append(escape(e.getStartTime()))
-              .append(",").append(escape(e.getEndTime()))
-              .append(",").append(escape(e.getCoverCharge()))
-              .append(",").append(escape(e.getAdditionalInfo()))
-              .append(",").append(escape(e.getEventCreator()))
-              .append("\n");
+      ZoneId newYorkZone = ZoneId.of("America/New_York");
+      ZonedDateTime createdAtInNYTime = e.getCreatedAt().atZone(newYorkZone);
+      writer.writeRow(
+              e.getId(),
+              e.getEventCode(),
+              e.getBand().getId(),
+              e.getBand().getBandName(),
+              e.getBand().getBandType(),
+              e.getBand().getTributeBandName(),
+              genresListToString(e.getBand().getGenres()),
+              e.getVenue().getId(),
+              e.getVenue().getVenueName(),
+              e.getVenue().getLocation().getFormattedAddress(),
+              e.getVenue().getLocation().getTown(),
+              e.getVenue().getLocation().getCounty(),
+              createdAtInNYTime.format(dateDayFormatter),
+              e.getEmail(),
+              e.getEventDate(),
+              e.getStartTime(),
+              e.getEndTime(),
+              e.getCoverCharge(),
+              e.getAdditionalInfo(),
+              e.getEventCreator()
+      );
     }
 
-    return sb.toString();
+    writer.flush();
+
+    return stringWriter.toString();
   }
 
   public String toBandsCsv(List<Band> bands) {
-    StringBuilder sb = new StringBuilder();
+    StringWriter stringWriter = new StringWriter();
 
-    sb.append(String.join(",",
+    CsvWriterSettings csvSettings = new CsvWriterSettings();
+    csvSettings.setQuoteAllFields(true);
+
+    CsvWriter writer = new CsvWriter(stringWriter, csvSettings);
+    writer.writeHeaders(
             "bandId",
             "bandName",
             "bandType",
@@ -77,27 +96,34 @@ public class CsvMapper {
             "facebookUrl",
             "instagramUrl",
             "websiteUrl"
-    )).append("\n");
+    );
 
     for (Band b : bands) {
-      sb.append(escape(b.getId()))
-              .append(",").append(escape(b.getBandName()))
-              .append(",").append(escape(b.getBandType()))
-              .append(",").append(escape(listToString(b.getGenres())))
-              .append(",").append(escape(b.getTributeBandName()))
-              .append(",").append(escape(b.getFacebookUrl()))
-              .append(",").append(escape(b.getInstagramUrl()))
-              .append(",").append(escape(b.getWebsiteUrl()))
-              .append("\n");
+      writer.writeRow(
+              b.getId(),
+              b.getBandName(),
+              b.getBandType(),
+              genresListToString(b.getGenres()),
+              b.getTributeBandName(),
+              b.getFacebookUrl(),
+              b.getInstagramUrl(),
+              b.getWebsiteUrl()
+      );
     }
 
-    return sb.toString();
+    writer.flush();
+
+    return stringWriter.toString();
   }
 
   public String toVenuesCsv(List<Venue> venues) {
-    StringBuilder sb = new StringBuilder();
+    StringWriter stringWriter = new StringWriter();
 
-    sb.append(String.join(",",
+    CsvWriterSettings csvSettings = new CsvWriterSettings();
+    csvSettings.setQuoteAllFields(true);
+
+    CsvWriter writer = new CsvWriter(stringWriter, csvSettings);
+    writer.writeHeaders(
             "venueId",
             "venueName",
             "address",
@@ -107,38 +133,32 @@ public class CsvMapper {
             "facebookUrl",
             "instagramUrl",
             "websiteUrl"
-    )).append("\n");
+    );
 
     for (Venue v : venues) {
-      sb.append(escape(v.getId()))
-              .append(",").append(escape(v.getVenueName()))
-              .append(",").append(escape(v.getLocation().getFormattedAddress()))
-              .append(",").append(escape(v.getLocation().getCounty()))
-              .append(",").append(escape(v.getLocation().getTown()))
-              .append(",").append(escape(v.getPhoneNumber()))
-              .append(",").append(escape(v.getFacebookUrl()))
-              .append(",").append(escape(v.getInstagramUrl()))
-              .append(",").append(escape(v.getWebsiteUrl()))
-              .append("\n");
+      writer.writeRow(
+              v.getId(),
+              v.getVenueName(),
+              v.getLocation().getFormattedAddress(),
+              v.getLocation().getCounty(),
+              v.getLocation().getTown(),
+              v.getPhoneNumber(),
+              v.getFacebookUrl(),
+              v.getInstagramUrl(),
+              v.getWebsiteUrl()
+      );
     }
 
-    return sb.toString();
+    writer.flush();
+
+    return stringWriter.toString();
   }
 
-  private String escape(Object value) {
-    if (value == null) return "";
-    String s = value.toString();
-    if (s.contains(",") || s.contains("\"")) {
-      s = s.replace("\"", "\"\"");
-      s = "\"" + s + "\"";
+  private String genresListToString(List<Genre> genres) {
+    StringBuilder result = new StringBuilder();
+    for (Genre g : genres) {
+      result.append(g.toString()).append(";");
     }
-    return s;
-  }
-
-  private String listToString(List<?> list) {
-    if (list == null) return "";
-    return list.stream()
-            .map(x -> x.toString().replace(",", ";"))
-            .collect(Collectors.joining(";"));
+    return result.toString();
   }
 }
