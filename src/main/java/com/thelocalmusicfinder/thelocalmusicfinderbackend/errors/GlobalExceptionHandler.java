@@ -73,10 +73,6 @@ public class GlobalExceptionHandler {
     );
     logger.error(message);
 
-    try {
-      emailService.sendErrorEmail("ERROR: An error occurred in the backend (See details)", "<p>" + message + "</p>");
-    } catch (EmailSendException exception) {
-      logger.error("Error occurred when trying to send generic email error message " + exception.getMessage());
-    }
+    emailService.sendErrorEmail("ERROR: An error occurred in the backend (See details)", "<p>" + message + "</p>");
   }
 }

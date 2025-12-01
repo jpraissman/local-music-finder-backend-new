@@ -81,17 +81,17 @@ public class AdminController {
     return  ResponseEntity.ok().body(new MultiAdminEventsResponseDTO(result));
   }
 
-  @PutMapping("/venue/edit")
-  public ResponseEntity<Void> editVenue(@Valid @RequestBody VenueDTO venuePayload) {
-    venueService.editVenue(venuePayload);
-    return ResponseEntity.ok().build();
-  }
+//  @PutMapping("/venue/edit")
+//  public ResponseEntity<Void> editVenue(@Valid @RequestBody VenueDTO venuePayload) {
+//    venueService.editVenue(venuePayload);
+//    return ResponseEntity.ok().build();
+//  }
 
-  @PutMapping("band/edit")
-  public ResponseEntity<Void> editBand(@Valid @RequestBody BandDTO bandPayload) {
-    bandService.editBand(bandPayload);
-    return ResponseEntity.ok().build();
-  }
+//  @PutMapping("band/edit")
+//  public ResponseEntity<Void> editBand(@Valid @RequestBody BandDTO bandPayload) {
+//    bandService.editBand(bandPayload);
+//    return ResponseEntity.ok().build();
+//  }
 
 
 }

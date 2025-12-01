@@ -24,6 +24,18 @@ public class BandMapper {
             .build();
   }
 
+  public BasicBandInfo toBasicBand(Band band) {
+    return BasicBandInfo.builder()
+            .bandName(band.getBandName())
+            .bandType(band.getBandType())
+            .tributeBandName(band.getTributeBandName())
+            .genres(band.getGenres())
+            .facebookUrl(band.getFacebookUrl())
+            .instagramUrl(band.getInstagramUrl())
+            .websiteUrl(band.getWebsiteUrl())
+            .build();
+  }
+
   public BandDTO toBandDTO(Band band) {
     return BandDTO.builder()
             .id(band.getId())

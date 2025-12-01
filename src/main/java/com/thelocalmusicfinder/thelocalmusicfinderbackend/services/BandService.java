@@ -2,16 +2,19 @@ package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.BandNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.InvalidYoutubeUrl;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +26,9 @@ public class BandService {
 
   private final BandRepository bandRepository;
   private final LoggerService loggerService;
+  private final BandMapper bandMapper;
+  private final EmailService emailService;
+  private final LoggerService logger;
 
   public List<Band> getAllBands() {
     return bandRepository.findAll();
@@ -48,7 +54,12 @@ public class BandService {
     }
   }
 
-  private Band updateBand(Band existingBand, BasicBandInfo updatedBandInfo) {
+  public Band updateBand(Band existingBand, BasicBandInfo updatedBandInfo) {
+    emailService.sendBandUpdatedEmail(bandMapper.toBasicBand(existingBand), updatedBandInfo, existingBand.getId());
+
+    String newBandName = updatedBandInfo.getBandName().trim();
+
+    existingBand.setBandName(newBandName);
     existingBand.setBandType(updatedBandInfo.getBandType());
     existingBand.setTributeBandName(updatedBandInfo.getTributeBandName());
     existingBand.setGenres(updatedBandInfo.getGenres());
@@ -56,12 +67,18 @@ public class BandService {
     existingBand.setInstagramUrl(updatedBandInfo.getInstagramUrl());
     existingBand.setWebsiteUrl(updatedBandInfo.getWebsiteUrl());
 
-    return bandRepository.save(existingBand);
+    Band savedBand  = bandRepository.save(existingBand);
+
+    checkForDuplicates(newBandName);
+
+    return savedBand;
   }
 
   private Band createBand(BasicBandInfo bandInfo) {
+    String bandName =  bandInfo.getBandName().trim();
+
     Band band = Band.builder()
-            .bandName(bandInfo.getBandName().trim())
+            .bandName(bandName)
             .bandType(bandInfo.getBandType())
             .tributeBandName(bandInfo.getTributeBandName())
             .genres(bandInfo.getGenres())
@@ -69,7 +86,31 @@ public class BandService {
             .instagramUrl(bandInfo.getInstagramUrl())
             .websiteUrl(bandInfo.getWebsiteUrl())
             .build();
-    return bandRepository.save(band);
+    Band savedBand = bandRepository.save(band);
+
+    checkForDuplicates(bandName);
+
+    return savedBand;
+  }
+
+  private void checkForDuplicates(String bandName) {
+    List<Band> allBands = bandRepository.findAll();
+    List<Band> potentialDuplicateBands = new ArrayList<>();
+
+    for (Band band : allBands) {
+      double simScore = StringSimilarity.findSimilarity(bandName, band.getBandName());
+      if (simScore > 10) {
+        potentialDuplicateBands.add(band);
+      }
+    }
+
+    if (potentialDuplicateBands.size() > 1) {
+      logger.warn("Found " + potentialDuplicateBands.size() + " bands with similar names");
+      for (Band band : potentialDuplicateBands) {
+        logger.warn("Similarity: Band id " + band.getId() + ": " + band.getBandName());
+      }
+      emailService.sendDuplicateBandEmail(potentialDuplicateBands);
+    }
   }
 
   public Band getBand(Long id) {
@@ -123,22 +164,4 @@ public class BandService {
 
     return null;
   }
-
-  public void editBand(BandDTO bandDTO) {
-    Optional<Band> optionalBand = bandRepository.findById(bandDTO.getId());
-    if (optionalBand.isEmpty()) {
-      throw new BandNotFound("Band with id " + bandDTO.getId() + " not found");
-    }
-
-    Band band = optionalBand.get();
-    band.setBandType(bandDTO.getBandType());
-    band.setTributeBandName(bandDTO.getTributeBandName());
-    band.setGenres(bandDTO.getGenres());
-    band.setFacebookUrl(bandDTO.getFacebookUrl());
-    band.setInstagramUrl(bandDTO.getInstagramUrl());
-    band.setWebsiteUrl(bandDTO.getWebsiteUrl());
-    band.setBandName(bandDTO.getBandName());
-    bandRepository.save(band);
-  }
-
 }
