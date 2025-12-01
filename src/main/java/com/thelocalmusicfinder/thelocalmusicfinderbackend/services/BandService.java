@@ -99,7 +99,8 @@ public class BandService {
 
     for (Band band : allBands) {
       double simScore = StringSimilarity.findSimilarity(bandName, band.getBandName());
-      if (simScore > 10) {
+      if (simScore > 20) {
+        logger.info("Band with name " + band.getBandName() + " is potential duplicate to " + bandName + " with simScore of " + simScore);
         potentialDuplicateBands.add(band);
       }
     }

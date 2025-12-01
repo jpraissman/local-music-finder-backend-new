@@ -101,7 +101,8 @@ public class VenueService {
 
     for (Venue venue : allVenues) {
       double simScore = StringSimilarity.findSimilarity(venueName, venue.getVenueName());
-      if (simScore > 10) {
+      if (simScore > 20) {
+        logger.info("Venue with name " + venue.getVenueName() + " is potential duplicate to " + venueName + " with simScore of " + simScore);
         potentialDuplicateVenues.add(venue);
       }
     }
