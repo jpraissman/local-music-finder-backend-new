@@ -1,14 +1,16 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,38 +24,56 @@ public class VenueService {
   private final MapsService mapsService;
   private final LoggerService logger;
   private final EmailService emailService;
+  private final VenueMapper  venueMapper;
 
   public List<Venue> getAllVenues() {
     return venueRepository.findAll();
   }
 
+  /**
+   * Creates or updates a venue based on the given information. Matches for
+   * existing venues based on locationId
+   * @return the created or updated venue
+   */
   public Venue upsertVenue(BasicVenueInfo venueInfo) {
-    // Check for existing venue based on name and location
-    String venueName = venueInfo.getVenueName().trim();
-    Location venueLocation = mapsService.getLocationById(venueInfo.getLocationId());
-    Optional<Venue> existingVenue = venueRepository.findByVenueNameAndLocation(venueName, venueLocation);
+    // Check for existing venue based on location id
+    Optional<Venue> existingVenue = venueRepository.findByLocation_LocationId(venueInfo.getLocationId());
 
     if (existingVenue.isPresent()) {
       return this.updateVenue(existingVenue.get(), venueInfo);
     } else {
-      // TODO: Check if there is a similar named venue or one with same address?? And send email
-      return this.createVenue(venueInfo, venueLocation);
+      return this.createVenue(venueInfo);
     }
   }
 
-  private Venue updateVenue(Venue existingVenue, BasicVenueInfo updatedVenueInfo) {
+  public Venue updateVenue(Venue existingVenue, BasicVenueInfo updatedVenueInfo) {
+    emailService.sendVenueUpdatedEmail(venueMapper.toBasicVenueInfo(existingVenue), updatedVenueInfo, existingVenue.getId());
+
+    Location newLocation = mapsService.getLocationById(updatedVenueInfo.getLocationId());
+    String newVenueName = updatedVenueInfo.getVenueName().trim();
+
     existingVenue.setFacebookUrl(updatedVenueInfo.getFacebookUrl());
     existingVenue.setInstagramUrl(updatedVenueInfo.getInstagramUrl());
     existingVenue.setWebsiteUrl(updatedVenueInfo.getWebsiteUrl());
     existingVenue.setPhoneNumber(updatedVenueInfo.getPhoneNumber());
+    existingVenue.setLocation(newLocation);
+    existingVenue.setVenueName(newVenueName);
 
-    return venueRepository.save(existingVenue);
+    Venue savedVenue = venueRepository.save(existingVenue);
+
+    validateLocation(savedVenue.getId(), newLocation);
+    checkForDuplicates(newVenueName);
+
+    return savedVenue;
   }
 
-  private Venue createVenue(BasicVenueInfo venueInfo, Location venueLocation) {
+  private Venue createVenue(BasicVenueInfo venueInfo) {
+    Location location = mapsService.getLocationById(venueInfo.getLocationId());
+    String venueName = venueInfo.getVenueName().trim();
+
     Venue venue = Venue.builder()
-            .venueName(venueInfo.getVenueName().trim())
-            .location(venueLocation)
+            .venueName(venueName)
+            .location(location)
             .facebookUrl(venueInfo.getFacebookUrl())
             .instagramUrl(venueInfo.getInstagramUrl())
             .websiteUrl(venueInfo.getWebsiteUrl())
@@ -62,12 +82,37 @@ public class VenueService {
 
     Venue savedVenue = venueRepository.save(venue);
 
-    if (venueLocation.getCounty() == null || venueLocation.getTown() == null) {
-      logger.error("Venue with id " + venue.getId() + " has location with id " + venueLocation.getLocationId() + " which has null values for either town or county.");
-      emailService.sendErrorEmail("ERROR: Venue has some unknown address information", "<p>Venue with id " + venue.getId() + " has some unknown address information.</p>");
-    }
+    validateLocation(savedVenue.getId(), location);
+    checkForDuplicates(venueName);
 
     return savedVenue;
+  }
+
+  private void validateLocation(Long venueId, Location location) {
+    if (location.getCounty() == null || location.getTown() == null) {
+      logger.error("Venue with id " + venueId + " has location with id " + location.getLocationId() + " which has null values for either town or county.");
+      emailService.sendErrorEmail("ERROR: Venue has some unknown address information", "<p>Venue with id " + venueId + " has some unknown address information.</p>");
+    }
+  }
+
+  private void checkForDuplicates(String venueName) {
+    List<Venue> allVenues = venueRepository.findAll();
+    List<Venue> potentialDuplicateVenues = new ArrayList<>();
+
+    for (Venue venue : allVenues) {
+      double simScore = StringSimilarity.findSimilarity(venueName, venue.getVenueName());
+      if (simScore > 10) {
+        potentialDuplicateVenues.add(venue);
+      }
+    }
+
+    if (potentialDuplicateVenues.size() > 1) {
+      logger.warn("Found " + potentialDuplicateVenues.size() + " venues with similar names");
+      for (Venue venue : potentialDuplicateVenues) {
+        logger.warn("Similarity: Venue id " + venue.getId() + ": " + venue.getVenueName());
+      }
+      emailService.sendDuplicateVenueEmail(potentialDuplicateVenues);
+    }
   }
 
   public Venue getVenue(Long id) {
@@ -77,25 +122,5 @@ public class VenueService {
     }
 
     return venue.get();
-  }
-
-  public void editVenue(VenueDTO venueDTO) {
-    Optional<Venue> optionalVenue = venueRepository.findById(venueDTO.getId());
-    if (optionalVenue.isEmpty()) {
-      throw new VenueNotFound("Venue with id " + venueDTO.getId() + " not found.");
-    }
-
-    Venue venue = optionalVenue.get();
-    String newVenueName = venue.getVenueName().trim();
-    Location newVenueLocation = mapsService.getLocationById(venue.getLocation().getLocationId());
-
-    venue.setVenueName(newVenueName);
-    venue.setLocation(newVenueLocation);
-    venue.setFacebookUrl(venueDTO.getFacebookUrl());
-    venue.setInstagramUrl(venueDTO.getInstagramUrl());
-    venue.setWebsiteUrl(venueDTO.getWebsiteUrl());
-    venue.setPhoneNumber(venueDTO.getPhoneNumber());
-
-    venueRepository.save(venue);
   }
 }
