@@ -1,8 +1,10 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.errors;
 
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.BandNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EmailSendException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.LocationQueryException;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EventNotFound;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.EmailService;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.LoggerService;
 
@@ -27,7 +29,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(Exception exception, HttpServletRequest request) {
-    this.logErrorAndEmail("Generic Exception: " + exception.getMessage(), request);
+    this.logErrorAndEmail("Generic Exception: " + exception.getMessage(), request, true);
 
     ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", "Internal Server Error");
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -35,7 +37,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(LocationQueryException.class)
   public ResponseEntity<ErrorResponse> handleAddressCoordinatesException(LocationQueryException exception, HttpServletRequest request) {
-    this.logErrorAndEmail("Location Query Exception: " + exception.getMessage(), request);
+    this.logErrorAndEmail("Location Query Exception: " + exception.getMessage(), request, true);
 
     ErrorResponse error = new ErrorResponse("ADDRESS_ERROR", "The given address could not be processed.");
     return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
@@ -43,16 +45,32 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(EventNotFound.class)
   public ResponseEntity<ErrorResponse> handleEventNotFound(EventNotFound exception, HttpServletRequest request) {
-    this.logErrorAndEmail("Event Not Found: " + exception.getMessage(), request);
+    this.logErrorAndEmail("Event Not Found: " + exception.getMessage(), request, true);
 
     ErrorResponse error = new ErrorResponse("EVENT_NOT_FOUND", "The given event could not be found.");
+    return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(VenueNotFound.class)
+  public ResponseEntity<ErrorResponse> handleVenueNotFound(EventNotFound exception, HttpServletRequest request) {
+    this.logErrorAndEmail("Venue Not Found: " + exception.getMessage(), request, false);
+
+    ErrorResponse error = new ErrorResponse("VENUE_NOT_FOUND", "The given venue could not be found.");
+    return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(BandNotFound.class)
+  public ResponseEntity<ErrorResponse> handleBandNotFound(EventNotFound exception, HttpServletRequest request) {
+    this.logErrorAndEmail("Band Not Found: " + exception.getMessage(), request, false);
+
+    ErrorResponse error = new ErrorResponse("BAND_NOT_FOUND", "The given band could not be found.");
     return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
   }
 
   // Handles @Valid on @RequestBody
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
-    this.logErrorAndEmail("Validation Exception: " + ex.getMessage(), request);
+    this.logErrorAndEmail("Validation Exception: " + ex.getMessage(), request, true);
 
     Map<String, String> errors = new HashMap<>();
 
@@ -63,7 +81,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(errors);
   }
 
-  private void logErrorAndEmail(String customMessage, HttpServletRequest request) {
+  private void logErrorAndEmail(String customMessage, HttpServletRequest request, boolean sendEmail) {
     String message = String.format(
             "{ path: \"%s\", method: \"%s\", remoteIp: \"%s\", customMessage: \"%s\" }",
             request.getRequestURI(),
@@ -73,6 +91,8 @@ public class GlobalExceptionHandler {
     );
     logger.error(message);
 
-    emailService.sendErrorEmail("ERROR: An error occurred in the backend (See details)", "<p>" + message + "</p>");
+    if (sendEmail) {
+      emailService.sendErrorEmail("ERROR: An error occurred in the backend (See details)", "<p>" + message + "</p>");
+    }
   }
 }
