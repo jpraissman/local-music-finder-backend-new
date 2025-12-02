@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(VenueNotFound.class)
-  public ResponseEntity<ErrorResponse> handleVenueNotFound(EventNotFound exception, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponse> handleVenueNotFound(VenueNotFound exception, HttpServletRequest request) {
     this.logErrorAndEmail("Venue Not Found: " + exception.getMessage(), request, false);
 
     ErrorResponse error = new ErrorResponse("VENUE_NOT_FOUND", "The given venue could not be found.");
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(BandNotFound.class)
-  public ResponseEntity<ErrorResponse> handleBandNotFound(EventNotFound exception, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponse> handleBandNotFound(BandNotFound exception, HttpServletRequest request) {
     this.logErrorAndEmail("Band Not Found: " + exception.getMessage(), request, false);
 
     ErrorResponse error = new ErrorResponse("BAND_NOT_FOUND", "The given band could not be found.");
