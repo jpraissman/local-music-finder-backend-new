@@ -1,6 +1,6 @@
 //package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 //
-//import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+//import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
 //import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.maps.Coordinates;
 //import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.maps.DetailedAddressInfo;
 //import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;

@@ -1,6 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EmailMessage;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.EmailSendException;

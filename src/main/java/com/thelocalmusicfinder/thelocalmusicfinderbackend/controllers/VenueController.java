@@ -1,6 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.controllers;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.GetVenuesDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.SearchVenuesResponseDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueWithEventsDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.TopLevelVenueMapper;
@@ -15,9 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,16 +28,16 @@ public class VenueController {
   private final VenueMapper venueMapper;
   private final TopLevelVenueMapper topLevelVenueMapper;
 
-  @GetMapping
-  public ResponseEntity<GetVenuesDTO> getVenues() {
-    List<Venue> venues = venueService.getAllVenues();
+  @GetMapping("/search/{venueNameQuery}")
+  public ResponseEntity<SearchVenuesResponseDTO> searchVenues(@PathVariable String venueNameQuery) {
+    List<Venue> venues = venueService.searchVenues(venueNameQuery);
 
-    Map<String, VenueDTO> venueResults = new HashMap<>();
+    List<VenueDTO> venueDTOs = new ArrayList<>();
     for (Venue venue : venues) {
-      venueResults.put(venue.getVenueName(), venueMapper.toVenueDTO(venue));
+      venueDTOs.add(venueMapper.toVenueDTO(venue));
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(new GetVenuesDTO(venueResults));
+    return ResponseEntity.status(HttpStatus.OK).body(new SearchVenuesResponseDTO(venueDTOs));
   }
 
   @GetMapping("/{id}")

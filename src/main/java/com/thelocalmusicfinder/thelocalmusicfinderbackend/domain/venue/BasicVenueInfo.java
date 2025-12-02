@@ -1,4 +1,4 @@
-package com.thelocalmusicfinder.thelocalmusicfinderbackend.domain;
+package com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
