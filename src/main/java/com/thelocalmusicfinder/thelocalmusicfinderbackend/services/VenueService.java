@@ -1,8 +1,11 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandWithSimScore;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.VenueWithSimScore;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
@@ -26,8 +29,39 @@ public class VenueService {
   private final EmailService emailService;
   private final VenueMapper  venueMapper;
 
-  public List<Venue> getAllVenues() {
-    return venueRepository.findAll();
+  /**
+   * @return the first 5 venues whose name contains the given venueNameQuery
+   */
+  public List<Venue> searchVenues(String venueNameQuery) {
+    // Return first 5 venues that match
+    List<Venue> matchingVenues = venueRepository.findByVenueNameContainingIgnoreCase(venueNameQuery);
+    if (!matchingVenues.isEmpty()) {
+      return matchingVenues.subList(0, Math.min(5,  matchingVenues.size()));
+    }
+
+    // If no venues match, return the 5 with the highest similarity score
+    List<Venue> allVenues = venueRepository.findAll();
+    List<VenueWithSimScore> similarVenues = new ArrayList<>();
+    for (Venue venue: allVenues) {
+      double simScore = StringSimilarity.findSimilarity(venueNameQuery, venue.getVenueName());
+      if (simScore > 15 && similarVenues.size() < 5) {
+        similarVenues.add(new VenueWithSimScore(venue, simScore));
+      } else if (simScore > 15) {
+        for (int i = 0; i < 5; i++) {
+          if (simScore > similarVenues.get(i).getSimScore()) {
+            similarVenues.add(i,  new VenueWithSimScore(venue, simScore));
+            similarVenues.removeLast();
+            break;
+          }
+        }
+      }
+    }
+
+    List<Venue> result = new ArrayList<>();
+    for (VenueWithSimScore venueWithSimScore : similarVenues) {
+      result.add(venueWithSimScore.getVenue());
+    }
+    return result;
   }
 
   /**

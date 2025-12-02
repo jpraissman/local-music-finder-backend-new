@@ -1,6 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.location.LocationDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;

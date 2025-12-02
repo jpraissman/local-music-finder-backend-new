@@ -1,6 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.BasicVenueInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.EventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.UpsertEventRequestDTO;
@@ -22,7 +22,6 @@ import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

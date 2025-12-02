@@ -3,7 +3,7 @@ package com.thelocalmusicfinder.thelocalmusicfinderbackend.controllers;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.AddVideoRequestDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandWithEventsDTO;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.GetBandsDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.SearchBandsResponseDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.TopLevelBandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
@@ -18,9 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,16 +32,16 @@ public class BandController {
   private final BandMapper bandMapper;
   private final TopLevelBandMapper topLevelBandMapper;
 
-  @GetMapping
-  public ResponseEntity<GetBandsDTO> getBands() {
-    List<Band> bands = bandService.getAllBands();
+  @GetMapping("/search/{bandNameQuery}")
+  public ResponseEntity<SearchBandsResponseDTO> searchBands(@PathVariable String bandNameQuery) {
+    List<Band> bands = bandService.searchBands(bandNameQuery);
 
-    Map<String, BandDTO> bandResults = new HashMap<>();
+    List<BandDTO> bandDTOs = new ArrayList<>();
     for (Band band : bands) {
-      bandResults.put(band.getBandName(), bandMapper.toBandDTO(band));
+      bandDTOs.add(bandMapper.toBandDTO(band));
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(new GetBandsDTO(bandResults));
+    return ResponseEntity.status(HttpStatus.OK).body(new SearchBandsResponseDTO(bandDTOs));
   }
 
   @GetMapping("/{id}")

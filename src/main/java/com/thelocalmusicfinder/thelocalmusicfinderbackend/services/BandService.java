@@ -1,12 +1,12 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandWithSimScore;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.BandNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.InvalidYoutubeUrl;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
@@ -30,8 +30,39 @@ public class BandService {
   private final EmailService emailService;
   private final LoggerService logger;
 
-  public List<Band> getAllBands() {
-    return bandRepository.findAll();
+  /**
+   * @return the first 5 bands whose name contains the given bandNameQuery
+   */
+  public List<Band> searchBands(String bandNameQuery) {
+    // Return first 5 bands that match
+    List<Band> matchingBands = bandRepository.findByBandNameContainingIgnoreCase(bandNameQuery);
+    if (!matchingBands.isEmpty()) {
+      return matchingBands.subList(0, Math.min(5,  matchingBands.size()));
+    }
+
+    // If no bands match, return the 5 with the highest similarity score
+    List<Band> allBands = bandRepository.findAll();
+    List<BandWithSimScore> similarBands = new ArrayList<>();
+    for (Band band : allBands) {
+      double simScore = StringSimilarity.findSimilarity(bandNameQuery, band.getBandName());
+      if (simScore > 15 && similarBands.size() < 5) {
+        similarBands.add(new BandWithSimScore(band, simScore));
+      } else if (simScore > 15) {
+        for (int i = 0; i < 5; i++) {
+          if (simScore > similarBands.get(i).getSimScore()) {
+            similarBands.add(i,  new BandWithSimScore(band, simScore));
+            similarBands.removeLast();
+            break;
+          }
+        }
+      }
+    }
+
+    List<Band> result = new ArrayList<>();
+    for (BandWithSimScore bandWithSimScore : similarBands) {
+      result.add(bandWithSimScore.getBand());
+    }
+    return result;
   }
 
   public Band upsertBand(BasicBandInfo bandInfo) {
