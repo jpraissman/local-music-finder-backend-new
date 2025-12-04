@@ -3,11 +3,14 @@ package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandType;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandWithSimScore;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.BandNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.InvalidYoutubeUrl;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,6 +33,7 @@ public class BandService {
   private final BandMapper bandMapper;
   private final EmailService emailService;
   private final LoggerService logger;
+  private final EventRepository eventRepository;
 
   /**
    * @return the first 5 bands whose name contains the given bandNameQuery
@@ -152,6 +157,25 @@ public class BandService {
     }
 
     return band.get();
+  }
+
+  @Transactional
+  public void mergeBands(Long band1Id, Long band2Id, BandDTO mergedBandInfo) {
+    Band band1 = this.getBand(band1Id);
+    Band band2 = this.getBand(band2Id);
+
+    for (Event band2Event : band2.getEvents()) {
+      band2Event.setBand(band1);
+    }
+    eventRepository.saveAll(band2.getEvents());
+
+    this.updateBand(band1, bandMapper.toBasicBand(mergedBandInfo));
+    if (band2.getYoutubeVideoIds().size() > band1.getYoutubeVideoIds().size()) {
+      band1.setYoutubeVideoIds(band2.getYoutubeVideoIds());
+      bandRepository.save(band1);
+    }
+
+    bandRepository.delete(band2);
   }
 
   public void addBandVideo(Long id, String youtubeUrl) {

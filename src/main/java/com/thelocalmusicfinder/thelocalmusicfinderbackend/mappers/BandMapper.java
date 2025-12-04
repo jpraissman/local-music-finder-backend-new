@@ -36,6 +36,18 @@ public class BandMapper {
             .build();
   }
 
+  public BasicBandInfo toBasicBand(BandDTO bandDTO) {
+    return BasicBandInfo.builder()
+            .bandName(bandDTO.getBandName())
+            .bandType(bandDTO.getBandType())
+            .tributeBandName(bandDTO.getTributeBandName())
+            .genres(bandDTO.getGenres())
+            .facebookUrl(bandDTO.getFacebookUrl())
+            .instagramUrl(bandDTO.getInstagramUrl())
+            .websiteUrl(bandDTO.getWebsiteUrl())
+            .build();
+  }
+
   public BandDTO toBandDTO(Band band) {
     return BandDTO.builder()
             .id(band.getId())
