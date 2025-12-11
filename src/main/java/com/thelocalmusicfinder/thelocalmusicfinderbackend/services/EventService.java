@@ -123,7 +123,6 @@ public class EventService {
     event.setAdditionalInfo(payload.getAdditionalInfo());
     event.setEventCreator(payload.getEventCreator());
     event.setAgreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy());
-    eventRepository.save(event);
 
     // Send admin email
     if (!event.getEmail().equals(adminEmail)) {
@@ -164,7 +163,6 @@ public class EventService {
    * @param distance distance from location (in miles)
    * @param timezone timezone to search in
    */
-  @Transactional
   public List<EventDTO> findEvents(String locationId, int distance, String timezone) {
     LocalDate todayDate = getTodayDate(timezone);
     List<Event> potentialEvents = eventRepository.findByEventDateGreaterThanEqual(todayDate);

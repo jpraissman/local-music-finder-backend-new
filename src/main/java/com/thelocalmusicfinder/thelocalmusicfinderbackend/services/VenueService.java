@@ -8,7 +8,6 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
@@ -30,7 +29,6 @@ public class VenueService {
   private final LoggerService logger;
   private final EmailService emailService;
   private final VenueMapper  venueMapper;
-  private final EventRepository  eventRepository;
 
   /**
    * @return the first 5 venues whose name contains the given venueNameQuery
@@ -72,6 +70,7 @@ public class VenueService {
    * existing venues based on locationId
    * @return the created or updated venue
    */
+  @Transactional
   public Venue upsertVenue(BasicVenueInfo venueInfo) {
     // Check for existing venue based on location id
     Optional<Venue> existingVenue = venueRepository.findByLocation_LocationId(venueInfo.getLocationId());
@@ -83,6 +82,7 @@ public class VenueService {
     }
   }
 
+  @Transactional
   public Venue updateVenue(Venue existingVenue, BasicVenueInfo updatedVenueInfo) {
     emailService.sendVenueUpdatedEmail(venueMapper.toBasicVenueInfo(existingVenue), updatedVenueInfo, existingVenue.getId());
 
@@ -96,12 +96,10 @@ public class VenueService {
     existingVenue.setLocation(newLocation);
     existingVenue.setVenueName(newVenueName);
 
-    Venue savedVenue = venueRepository.save(existingVenue);
-
-    validateLocation(savedVenue.getId(), newLocation);
+    validateLocation(existingVenue.getId(), newLocation);
     checkForDuplicates(newVenueName);
 
-    return savedVenue;
+    return existingVenue;
   }
 
   private Venue createVenue(BasicVenueInfo venueInfo) {
@@ -167,13 +165,13 @@ public class VenueService {
     Venue venue1 = this.getVenue(venue1Id);
     Venue venue2 = this.getVenue(venue2Id);
 
-    for (Event venue2Event : venue2.getEvents()) {
-      venue2Event.setVenue(venue1);
+    for (Event event: venue2.getEvents()) {
+      event.setVenue(venue1);
+      venue1.getEvents().add(event);
     }
-    eventRepository.saveAll(venue2.getEvents());
-
-    this.updateVenue(venue1, venueMapper.toBasicVenueInfo(mergedVenueInfo));
 
     venueRepository.delete(venue2);
+
+    this.updateVenue(venue1, venueMapper.toBasicVenueInfo(mergedVenueInfo));
   }
 }
