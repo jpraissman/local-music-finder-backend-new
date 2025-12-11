@@ -88,6 +88,12 @@ public class AdminController {
     return ResponseEntity.ok().build();
   }
 
+  @PostMapping("/venue/merge")
+  public ResponseEntity<Void> mergeVenues(@RequestParam() Long venue1Id, @RequestParam() Long venue2Id, @Valid @RequestBody VenueDTO mergedVenueInfo) {
+    venueService.mergeVenues(venue1Id, venue2Id, mergedVenueInfo);
+    return ResponseEntity.ok().build();
+  }
+
 //  @PutMapping("/venue/edit")
 //  public ResponseEntity<Void> editVenue(@Valid @RequestBody VenueDTO venuePayload) {
 //    venueService.editVenue(venuePayload);
