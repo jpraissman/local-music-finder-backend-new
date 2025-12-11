@@ -1,13 +1,14 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BandWithSimScore;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.VenueWithSimScore;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.errors.exceptions.VenueNotFound;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +30,7 @@ public class VenueService {
   private final LoggerService logger;
   private final EmailService emailService;
   private final VenueMapper  venueMapper;
+  private final EventRepository  eventRepository;
 
   /**
    * @return the first 5 venues whose name contains the given venueNameQuery
@@ -157,5 +160,20 @@ public class VenueService {
     }
 
     return venue.get();
+  }
+
+  @Transactional
+  public void mergeVenues(Long venue1Id, Long venue2Id, VenueDTO mergedVenueInfo) {
+    Venue venue1 = this.getVenue(venue1Id);
+    Venue venue2 = this.getVenue(venue2Id);
+
+    for (Event venue2Event : venue2.getEvents()) {
+      venue2Event.setVenue(venue1);
+    }
+    eventRepository.saveAll(venue2.getEvents());
+
+    this.updateVenue(venue1, venueMapper.toBasicVenueInfo(mergedVenueInfo));
+
+    venueRepository.delete(venue2);
   }
 }

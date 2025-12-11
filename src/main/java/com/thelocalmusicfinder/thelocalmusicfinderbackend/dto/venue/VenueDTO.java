@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Builder
 public class VenueDTO {
-  @NotBlank()
+  @NotNull()
   private Long id;
 
   @NotBlank()

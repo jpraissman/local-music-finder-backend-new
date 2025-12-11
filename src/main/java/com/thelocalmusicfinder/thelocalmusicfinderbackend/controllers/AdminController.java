@@ -19,6 +19,7 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.VenueService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,6 +80,18 @@ public class AdminController {
       result.add(eventMapper.toAdminEventDTO(event));
     }
     return  ResponseEntity.ok().body(new MultiAdminEventsResponseDTO(result));
+  }
+
+  @PostMapping("/band/merge")
+  public ResponseEntity<Void> mergeBands(@RequestParam() Long band1Id, @RequestParam() Long band2Id, @Valid @RequestBody BandDTO mergedBandInfo) {
+    bandService.mergeBands(band1Id, band2Id, mergedBandInfo);
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/venue/merge")
+  public ResponseEntity<Void> mergeVenues(@RequestParam() Long venue1Id, @RequestParam() Long venue2Id, @Valid @RequestBody VenueDTO mergedVenueInfo) {
+    venueService.mergeVenues(venue1Id, venue2Id, mergedVenueInfo);
+    return ResponseEntity.ok().build();
   }
 
 //  @PutMapping("/venue/edit")

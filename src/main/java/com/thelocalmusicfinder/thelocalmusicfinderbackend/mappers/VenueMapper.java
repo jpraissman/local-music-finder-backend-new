@@ -33,6 +33,17 @@ public class VenueMapper {
             .build();
   }
 
+  public BasicVenueInfo toBasicVenueInfo(VenueDTO venue) {
+    return BasicVenueInfo.builder()
+            .venueName(venue.getVenueName())
+            .locationId(venue.getLocation().getLocationId())
+            .facebookUrl(venue.getFacebookUrl())
+            .instagramUrl(venue.getInstagramUrl())
+            .websiteUrl(venue.getWebsiteUrl())
+            .phoneNumber(venue.getPhoneNumber())
+            .build();
+  }
+
   public VenueDTO toVenueDTO(Venue venue) {
     return VenueDTO.builder()
             .id(venue.getId())
