@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,6 +23,7 @@ public class MapsService {
   private final LocationRepository locationRepository;
   private final EventMapper eventMapper;
 
+  @Transactional
   public Location getLocationById(String locationId) {
     Optional<Location> optionalLocation = locationRepository.findById(locationId);
     if (optionalLocation.isPresent()) {

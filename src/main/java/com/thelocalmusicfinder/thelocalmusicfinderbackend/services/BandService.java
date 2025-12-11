@@ -10,7 +10,6 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
-import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
 
 import org.springframework.stereotype.Service;
@@ -33,7 +32,6 @@ public class BandService {
   private final BandMapper bandMapper;
   private final EmailService emailService;
   private final LoggerService logger;
-  private final EventRepository eventRepository;
 
   /**
    * @return the first 5 bands whose name contains the given bandNameQuery
@@ -70,6 +68,7 @@ public class BandService {
     return result;
   }
 
+  @Transactional
   public Band upsertBand(BasicBandInfo bandInfo) {
     // Check data is correct
     if (bandInfo.getTributeBandName() == null
@@ -90,6 +89,7 @@ public class BandService {
     }
   }
 
+  @Transactional
   public Band updateBand(Band existingBand, BasicBandInfo updatedBandInfo) {
     emailService.sendBandUpdatedEmail(bandMapper.toBasicBand(existingBand), updatedBandInfo, existingBand.getId());
 
@@ -103,11 +103,9 @@ public class BandService {
     existingBand.setInstagramUrl(updatedBandInfo.getInstagramUrl());
     existingBand.setWebsiteUrl(updatedBandInfo.getWebsiteUrl());
 
-    Band savedBand  = bandRepository.save(existingBand);
-
     checkForDuplicates(newBandName);
 
-    return savedBand;
+    return existingBand;
   }
 
   private Band createBand(BasicBandInfo bandInfo) {
@@ -164,20 +162,21 @@ public class BandService {
     Band band1 = this.getBand(band1Id);
     Band band2 = this.getBand(band2Id);
 
-    for (Event band2Event : band2.getEvents()) {
-      band2Event.setBand(band1);
+    for (Event event: band2.getEvents()) {
+      event.setBand(band1);
+      band1.getEvents().add(event);
     }
-    eventRepository.saveAll(band2.getEvents());
 
-    this.updateBand(band1, bandMapper.toBasicBand(mergedBandInfo));
     if (band2.getYoutubeVideoIds().size() > band1.getYoutubeVideoIds().size()) {
       band1.setYoutubeVideoIds(band2.getYoutubeVideoIds());
-      bandRepository.save(band1);
     }
 
     bandRepository.delete(band2);
+
+    this.updateBand(band1, bandMapper.toBasicBand(mergedBandInfo));
   }
 
+  @Transactional
   public void addBandVideo(Long id, String youtubeUrl) {
     Band band = getBand(id);
     String videoId = extractYouTubeVideoId(youtubeUrl);
@@ -190,7 +189,6 @@ public class BandService {
       throw new InvalidYoutubeUrl("Given youtubeUrl already exists for band. videoId: " + videoId);
     }
     band.getYoutubeVideoIds().add(videoId);
-    bandRepository.save(band);
   }
 
   private String extractYouTubeVideoId(String youtubeUrl) {
