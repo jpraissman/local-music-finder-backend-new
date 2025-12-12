@@ -11,6 +11,7 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.UtilFunctions;
 
 import org.springframework.stereotype.Service;
 
@@ -97,11 +98,11 @@ public class BandService {
 
     existingBand.setBandName(newBandName);
     existingBand.setBandType(updatedBandInfo.getBandType());
-    existingBand.setTributeBandName(updatedBandInfo.getTributeBandName());
+    existingBand.setTributeBandName(UtilFunctions.stringOrNull(updatedBandInfo.getTributeBandName()));
     existingBand.setGenres(updatedBandInfo.getGenres());
-    existingBand.setFacebookUrl(updatedBandInfo.getFacebookUrl());
-    existingBand.setInstagramUrl(updatedBandInfo.getInstagramUrl());
-    existingBand.setWebsiteUrl(updatedBandInfo.getWebsiteUrl());
+    existingBand.setFacebookUrl(UtilFunctions.stringOrNull(updatedBandInfo.getFacebookUrl()));
+    existingBand.setInstagramUrl(UtilFunctions.stringOrNull(updatedBandInfo.getInstagramUrl()));
+    existingBand.setWebsiteUrl(UtilFunctions.stringOrNull(updatedBandInfo.getWebsiteUrl()));
 
     checkForDuplicates(newBandName);
 
@@ -114,11 +115,11 @@ public class BandService {
     Band band = Band.builder()
             .bandName(bandName)
             .bandType(bandInfo.getBandType())
-            .tributeBandName(bandInfo.getTributeBandName())
+            .tributeBandName(UtilFunctions.stringOrNull(bandInfo.getTributeBandName()))
             .genres(bandInfo.getGenres())
-            .facebookUrl(bandInfo.getFacebookUrl())
-            .instagramUrl(bandInfo.getInstagramUrl())
-            .websiteUrl(bandInfo.getWebsiteUrl())
+            .facebookUrl(UtilFunctions.stringOrNull(bandInfo.getFacebookUrl()))
+            .instagramUrl(UtilFunctions.stringOrNull(bandInfo.getInstagramUrl()))
+            .websiteUrl(UtilFunctions.stringOrNull(bandInfo.getWebsiteUrl()))
             .build();
     Band savedBand = bandRepository.save(band);
 
@@ -177,6 +178,17 @@ public class BandService {
   }
 
   @Transactional
+  public void deleteVideo(Long bandId, String youtubeVideoId) {
+    Band band = this.getBand(bandId);
+    for (int i = 0; i < band.getYoutubeVideoIds().size(); i++) {
+      if (youtubeVideoId.equals(band.getYoutubeVideoIds().get(i))) {
+        band.getYoutubeVideoIds().remove(i);
+        return;
+      }
+    }
+  }
+
+  @Transactional
   public void addBandVideo(Long id, String youtubeUrl) {
     Band band = getBand(id);
     String videoId = extractYouTubeVideoId(youtubeUrl);
@@ -189,6 +201,8 @@ public class BandService {
       throw new InvalidYoutubeUrl("Given youtubeUrl already exists for band. videoId: " + videoId);
     }
     band.getYoutubeVideoIds().add(videoId);
+
+    emailService.sendVideoPostedEmail(band.getBandName(), band.getId());
   }
 
   private String extractYouTubeVideoId(String youtubeUrl) {

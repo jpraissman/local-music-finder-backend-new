@@ -228,6 +228,17 @@ public class EmailService {
     emailService.sendEmail(emailMessage);
   }
 
+  public void sendVideoPostedEmail(String bandName, Long bandId) {
+    EmailMessage emailMessage = EmailMessage.builder()
+            .fromEmail(fromEmail)
+            .fromName("The Local Music Finder")
+            .toEmail(fromEmail)
+            .toName("The Local Music Finder")
+            .subject("A Video Was Posted for " + bandName)
+            .htmlBody("<p>A video was posted for " + bandName + ". <a href=https://www.thelocalmusicfinder.com/band/" + bandId + "?p=1>View Band</a>").build();
+    emailService.sendEmail(emailMessage);
+  }
+
   public void sendErrorEmail(String subject, String htmlBody) {
     EmailMessage emailMessage = EmailMessage.builder()
             .fromEmail(fromEmail)
