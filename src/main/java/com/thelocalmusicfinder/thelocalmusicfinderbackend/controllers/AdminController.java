@@ -4,8 +4,10 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.AdminEventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.MultiAdminEventsResponseDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.CsvMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
@@ -18,7 +20,9 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.VenueService;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +49,8 @@ public class AdminController {
   private final VenueRepository venueRepository;
   private final EventService eventService;
   private final EventMapper eventMapper;
+  private final VenueMapper venueMapper;
+  private final BandMapper bandMapper;
 
   @GetMapping("/validate")
   public ResponseEntity<Void> validateAdmin() {
@@ -94,17 +100,23 @@ public class AdminController {
     return ResponseEntity.ok().build();
   }
 
-//  @PutMapping("/venue/edit")
-//  public ResponseEntity<Void> editVenue(@Valid @RequestBody VenueDTO venuePayload) {
-//    venueService.editVenue(venuePayload);
-//    return ResponseEntity.ok().build();
-//  }
+  @PutMapping("/venue/edit")
+  public ResponseEntity<Void> editVenue(@Valid @RequestBody VenueDTO venuePayload) {
+    Venue existingVenue = venueService.getVenue(venuePayload.getId());
+    venueService.updateVenue(existingVenue, venueMapper.toBasicVenueInfo(venuePayload));
+    return ResponseEntity.ok().build();
+  }
 
-//  @PutMapping("band/edit")
-//  public ResponseEntity<Void> editBand(@Valid @RequestBody BandDTO bandPayload) {
-//    bandService.editBand(bandPayload);
-//    return ResponseEntity.ok().build();
-//  }
+  @PutMapping("band/edit")
+  public ResponseEntity<Void> editBand(@Valid @RequestBody BandDTO bandPayload) {
+    Band existingBand = bandService.getBand(bandPayload.getId());
+    bandService.updateBand(existingBand, bandMapper.toBasicBand(bandPayload));
+    return ResponseEntity.ok().build();
+  }
 
-
+  @DeleteMapping("band/{bandId}/video/{youtubeVideoId}")
+  public ResponseEntity<Void> deleteVideo(@PathVariable Long bandId, @PathVariable String youtubeVideoId) {
+    bandService.deleteVideo(bandId, youtubeVideoId);
+    return ResponseEntity.ok().build();
+  }
 }

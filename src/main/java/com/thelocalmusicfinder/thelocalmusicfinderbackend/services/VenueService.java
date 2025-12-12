@@ -10,6 +10,7 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.StringSimilarity;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.UtilFunctions;
 
 import org.springframework.stereotype.Service;
 
@@ -89,10 +90,10 @@ public class VenueService {
     Location newLocation = mapsService.getLocationById(updatedVenueInfo.getLocationId());
     String newVenueName = updatedVenueInfo.getVenueName().trim();
 
-    existingVenue.setFacebookUrl(updatedVenueInfo.getFacebookUrl());
-    existingVenue.setInstagramUrl(updatedVenueInfo.getInstagramUrl());
-    existingVenue.setWebsiteUrl(updatedVenueInfo.getWebsiteUrl());
-    existingVenue.setPhoneNumber(updatedVenueInfo.getPhoneNumber());
+    existingVenue.setFacebookUrl(UtilFunctions.stringOrNull(updatedVenueInfo.getFacebookUrl()));
+    existingVenue.setInstagramUrl(UtilFunctions.stringOrNull(updatedVenueInfo.getInstagramUrl()));
+    existingVenue.setWebsiteUrl(UtilFunctions.stringOrNull(updatedVenueInfo.getWebsiteUrl()));
+    existingVenue.setPhoneNumber(UtilFunctions.stringOrNull(updatedVenueInfo.getPhoneNumber()));
     existingVenue.setLocation(newLocation);
     existingVenue.setVenueName(newVenueName);
 
@@ -109,10 +110,10 @@ public class VenueService {
     Venue venue = Venue.builder()
             .venueName(venueName)
             .location(location)
-            .facebookUrl(venueInfo.getFacebookUrl())
-            .instagramUrl(venueInfo.getInstagramUrl())
-            .websiteUrl(venueInfo.getWebsiteUrl())
-            .phoneNumber(venueInfo.getPhoneNumber())
+            .facebookUrl(UtilFunctions.stringOrNull(venueInfo.getFacebookUrl()))
+            .instagramUrl(UtilFunctions.stringOrNull(venueInfo.getInstagramUrl()))
+            .websiteUrl(UtilFunctions.stringOrNull(venueInfo.getWebsiteUrl()))
+            .phoneNumber(UtilFunctions.stringOrNull(venueInfo.getPhoneNumber()))
             .build();
 
     Venue savedVenue = venueRepository.save(venue);

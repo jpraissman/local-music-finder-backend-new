@@ -14,6 +14,7 @@ import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.util.UtilFunctions;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -75,7 +76,7 @@ public class EventService {
             .startTime(payload.getStartTime())
             .endTime(payload.getEndTime())
             .coverCharge(payload.getCoverCharge())
-            .additionalInfo(payload.getAdditionalInfo())
+            .additionalInfo(UtilFunctions.stringOrNull(payload.getAdditionalInfo()))
             .eventCreator(payload.getEventCreator())
             .agreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy())
             .build();
@@ -120,7 +121,7 @@ public class EventService {
     event.setStartTime(payload.getStartTime());
     event.setEndTime(payload.getEndTime());
     event.setCoverCharge(payload.getCoverCharge());
-    event.setAdditionalInfo(payload.getAdditionalInfo());
+    event.setAdditionalInfo(UtilFunctions.stringOrNull(payload.getAdditionalInfo()));
     event.setEventCreator(payload.getEventCreator());
     event.setAgreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy());
 
