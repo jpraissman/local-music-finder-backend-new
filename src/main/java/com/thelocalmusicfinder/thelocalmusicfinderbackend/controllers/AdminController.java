@@ -3,19 +3,23 @@ package com.thelocalmusicfinder.thelocalmusicfinderbackend.controllers;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.band.BandDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.AdminEventDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.event.MultiAdminEventsResponseDTO;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.location.ExtendedLocationDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.dto.venue.VenueDTO;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.BandMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.CsvMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.EventMapper;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.LocationMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.mappers.VenueMapper;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Band;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Event;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Location;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.models.Venue;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.BandRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.EventRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.repositories.VenueRepository;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.BandService;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.EventService;
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.MapsService;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.services.VenueService;
 
 import org.springframework.http.HttpHeaders;
@@ -51,6 +55,8 @@ public class AdminController {
   private final EventMapper eventMapper;
   private final VenueMapper venueMapper;
   private final BandMapper bandMapper;
+  private final MapsService mapsService;
+  private final LocationMapper locationMapper;
 
   @GetMapping("/validate")
   public ResponseEntity<Void> validateAdmin() {
@@ -118,5 +124,11 @@ public class AdminController {
   public ResponseEntity<Void> deleteVideo(@PathVariable Long bandId, @PathVariable String youtubeVideoId) {
     bandService.deleteVideo(bandId, youtubeVideoId);
     return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/location/{locationId}")
+  public ResponseEntity<ExtendedLocationDTO> getExtendedLocation(@PathVariable String locationId) {
+    Location location = mapsService.getLocationById(locationId);
+    return ResponseEntity.ok().body(locationMapper.toExtendedLocationDTO(location));
   }
 }
