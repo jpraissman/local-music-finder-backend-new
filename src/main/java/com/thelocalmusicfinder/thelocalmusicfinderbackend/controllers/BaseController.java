@@ -12,4 +12,8 @@ public class BaseController {
     return ResponseEntity.noContent().build();
   }
 
+  @GetMapping("/")
+  public ResponseEntity<Void> index() {
+    return ResponseEntity.notFound().build();
+  }
 }
