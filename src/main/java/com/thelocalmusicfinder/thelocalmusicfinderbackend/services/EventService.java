@@ -33,8 +33,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class EventService {
-  @Value("${FROM_EMAIL}")
-  private String adminEmail;
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   private static final SecureRandom random = new SecureRandom();
 
@@ -83,10 +81,8 @@ public class EventService {
     eventRepository.save(event);
 
     // Send event confirmation email and admin email
-    if (!event.getEmail().equals(adminEmail)) {
-      emailService.sendEventConfirmationEmail(event);
-      emailService.sendAdminEventUpsertedEmail(event, true);
-    }
+    emailService.sendEventConfirmationEmail(event);
+    emailService.sendAdminEventUpsertedOrDeletedEmail(event, true, false);
 
     // Check for duplicates
     List<Event> duplicateEvents = eventRepository.findByVenueAndEventDate(event.getVenue(), event.getEventDate());
@@ -126,9 +122,8 @@ public class EventService {
     event.setAgreesToTermsAndPrivacy(payload.isAgreesToTermsAndPrivacy());
 
     // Send admin email
-    if (!event.getEmail().equals(adminEmail)) {
-      emailService.sendAdminEventUpsertedEmail(event, false);
-    }
+    emailService.sendAdminEventUpsertedOrDeletedEmail(event, false, false);
+
 
     // Check for duplicates
     List<Event> duplicateEvents = eventRepository.findByVenueAndEventDate(event.getVenue(), event.getEventDate());
@@ -217,6 +212,9 @@ public class EventService {
 
   @Transactional
   public void deleteEvent(String eventCode) {
+    Event event = getEvent(eventCode);
+    emailService.sendAdminEventUpsertedOrDeletedEmail(event, false, true);
+
     eventRepository.deleteByEventCode(eventCode);
 
     // Delete any venues or bands that have 0 events
