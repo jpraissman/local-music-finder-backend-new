@@ -19,5 +19,9 @@ public enum Genre {
   RNB_SOUL,
   REGGAE,
   ROCK,
-  WORLD_MUSIC
+  WORLD_MUSIC,
+  JAM_BAND,
+  FUNK,
+  AMERICANA,
+  SINGER_SONGWRITER
 }
