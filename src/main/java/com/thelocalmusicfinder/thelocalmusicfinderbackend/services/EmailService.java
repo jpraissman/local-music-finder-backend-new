@@ -1,5 +1,6 @@
 package com.thelocalmusicfinder.thelocalmusicfinderbackend.services;
 
+import com.thelocalmusicfinder.thelocalmusicfinderbackend.context.IpContext;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.venue.BasicVenueInfo;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.EmailMessage;
 import com.thelocalmusicfinder.thelocalmusicfinderbackend.domain.band.BasicBandInfo;
@@ -30,8 +31,11 @@ public class EmailService {
 
   private final ForSendingEmails emailService;
   private final LoggerService logger;
+  private final IpContext ipContext;
 
   public void sendEventConfirmationEmail(Event event) {
+    if (ipContext.isAdminIp()) return;
+
     String htmlBody = String.format(
       """
       <p>Thanks for creating an event with The Local Music Finder! Your event has been posted and is available for all users to see.</p>
@@ -73,8 +77,10 @@ public class EmailService {
     emailService.sendEmail(emailMessage);
   }
 
-  public void sendAdminEventUpsertedEmail(Event event, boolean eventCreated) {
-    String createdOrUpdated = eventCreated ? "created" : "updated";
+  public void sendAdminEventUpsertedOrDeletedEmail(Event event, boolean eventCreated, boolean eventDeleted) {
+    if (ipContext.isAdminIp()) return;
+
+    String createdOrUpdatedOrDeleted = eventDeleted ? "deleted" : eventCreated ? "created" : "updated";
     String htmlBody = String.format(
       """
       <p>An event has been %s.</p>
@@ -93,8 +99,7 @@ public class EmailService {
         <strong><em>Venue Phone Number:</em></strong> %s<br />
         <strong><em>Email Address:</em></strong> %s
       </p>
-      """,
-      createdOrUpdated,
+      """, createdOrUpdatedOrDeleted,
       event.getVenue().getVenueName(),
       event.getVenue().getLocation().getFormattedAddress(),
       event.getBand().getBandName(),
@@ -114,12 +119,14 @@ public class EmailService {
             .fromName("The Local Music Finder")
             .toEmail(fromEmail)
             .toName("The Local Music Finder")
-            .subject("An event has been " + createdOrUpdated)
+            .subject("An event has been " + createdOrUpdatedOrDeleted)
             .htmlBody(htmlBody).build();
     emailService.sendEmail(emailMessage);
   }
 
   public void sendVenueUpdatedEmail(BasicVenueInfo originalVenue, BasicVenueInfo newVenue, Long venueId) {
+    if (ipContext.isAdminIp()) return;
+
     try {
       List<String> fieldDiffs = ObjectDiff.getObjectDiffs(originalVenue, newVenue);
       if (!fieldDiffs.isEmpty()) {
@@ -143,6 +150,8 @@ public class EmailService {
   }
 
   public void sendBandUpdatedEmail(BasicBandInfo originalBand, BasicBandInfo newBand, Long bandId) {
+    if (ipContext.isAdminIp()) return;
+
     try {
       List<String> fieldDiffs = ObjectDiff.getObjectDiffs(originalBand, newBand);
       if (!fieldDiffs.isEmpty()) {
@@ -229,6 +238,8 @@ public class EmailService {
   }
 
   public void sendVideoPostedEmail(String bandName, Long bandId) {
+    if (ipContext.isAdminIp()) return;
+
     EmailMessage emailMessage = EmailMessage.builder()
             .fromEmail(fromEmail)
             .fromName("The Local Music Finder")
